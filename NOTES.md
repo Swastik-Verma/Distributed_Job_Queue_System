@@ -58,3 +58,31 @@ client-supplied idempotency key on submission. Possible Week 8 addition.
 Currently three Lists (HIGH/MEDIUM/LOW) with workers checking in order.
 Works, but means maintaining three queues. Week 4 moves to a single
 Sorted Set where the priority is the score, so Redis handles ordering.
+
+
+## Why multiprocessing, not threads
+CPython's GIL serialises bytecode execution, so threads give no
+speedup for CPU-bound work. The GIL *is* released during I/O, so
+threads would work for email/API jobs — but processes were chosen for:
+fault isolation (one crash doesn't kill the pool), uniform handling of
+CPU-heavy job types (PDF generation, image resizing), and parity with
+Celery's default prefork pool.
+
+Trade-off: ~30-50MB per process vs KBs per thread. Fine at 3 workers,
+wrong choice at 200. A purely I/O-bound high-concurrency system should
+use asyncio.
+
+## Fork safety
+Processes do not share memory — coordination must happen through Redis
+or PostgreSQL, never through Python variables.
+
+Connections must never cross the fork boundary. A forked child inherits
+the parent's open sockets, so parent and child would interleave bytes on
+the same TCP connection. Each worker creates its own Redis client and
+SQLAlchemy engine *inside* the process.
+
+## Why RPOP is safe for multiple workers
+Redis is single-threaded and processes commands serially, so concurrent
+RPOPs are atomic — no two workers receive the same value. This does not
+cover worker death after the pop: the item is gone from Redis with no
+record it was taken. PostgreSQL status tracking covers that gap.
