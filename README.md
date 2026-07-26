@@ -44,8 +44,11 @@ pop an ID from Redis, then load the full job from PostgreSQL.
 - [x] PostgreSQL connection via SQLAlchemy ORM
 - [x] Redis connection
 - [x] `jobs` table schema with status/priority enums, retry tracking
-- [x] `POST /jobs` — submit a job, persisted as `PENDING`
+- [x] `POST /jobs` — submit a job (201), persisted as `PENDING`
 - [x] Job ID pushed to the matching Redis priority queue
+- [x] `GET /jobs/{id}` — fetch job status (200/404)
+- [x] Pydantic request/response schemas with case-insensitive priority
+- [x] Project restructured: `app/` package with `routers/` for endpoints
 
 ## Roadmap
 
