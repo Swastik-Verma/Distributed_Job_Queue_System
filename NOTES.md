@@ -86,3 +86,31 @@ Redis is single-threaded and processes commands serially, so concurrent
 RPOPs are atomic — no two workers receive the same value. This does not
 cover worker death after the pop: the item is gone from Redis with no
 record it was taken. PostgreSQL status tracking covers that gap.
+
+## Busy-wait vs blocking pop
+RPOP in a tight loop returns None instantly, spinning the CPU and
+flooding Redis with pointless requests. BRPOP blocks at the OS level —
+zero CPU while idle, sub-millisecond wake-up when a job arrives. A short
+timeout (5s) is used rather than blocking forever so the process stays
+responsive to signals and can do periodic housekeeping.
+
+## Priority via BRPOP key order
+BRPOP accepts multiple keys and checks them left to right, so passing
+[HIGH, MEDIUM, LOW] gives strict priority in a single call.
+
+Known flaw: strict priority means a continuous stream of HIGH jobs
+starves LOW entirely. Real systems mitigate with weighted selection or
+ageing (raising a job's effective priority the longer it waits).
+Revisited in Week 4.
+
+## Jobs are invisible between BRPOP and the status write
+BRPOP removes the ID from Redis atomically, but until the worker writes
+RUNNING to PostgreSQL, no system records that the job was taken. A crash
+in that window leaves the job PENDING forever with no queue entry.
+
+Redis's own recommended fix is RPOPLPUSH/LMOVE — atomically move the ID
+to a "processing" list so it is never in limbo, with a reaper returning
+stale entries. This project uses the PostgreSQL status column for that
+tracking instead: it is already durable and already the source of truth,
+so mirroring in-flight state in Redis adds little. The trade-off is a
+small window where the ID exists in neither place.
