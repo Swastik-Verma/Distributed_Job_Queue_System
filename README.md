@@ -49,6 +49,11 @@ pop an ID from Redis, then load the full job from PostgreSQL.
 - [x] `GET /jobs/{id}` — fetch job status (200/404)
 - [x] Pydantic request/response schemas with case-insensitive priority
 - [x] Project restructured: `app/` package with `routers/` for endpoints
+- [x] Worker processes pick up jobs from Redis via BRPOP
+- [x] Conditional claim prevents duplicate processing
+- [x] Jobs marked SUCCESS or FAILED after processing
+- [x] Error messages captured on failure
+- [x] 3 workers running in parallel via multiprocessing launcher
 
 ## Roadmap
 

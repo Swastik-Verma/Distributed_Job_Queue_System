@@ -13,13 +13,21 @@ load_dotenv()
 
 QUEUE_NAMES = ["redis_queue:HIGH", "redis_queue:MEDIUM", "redis_queue:LOW"]
 
-
-
 def process_job(job):
     """Simulate doing actual work. Real handlers come later."""
+    if job.type == "fail_test":
+        raise Exception("Simulated failure: email server unreachable")
+
     print(f"    type={job.type}  priority={job.priority.value}")
     print(f"    payload={job.payload}")
     time.sleep(2)
+
+
+# def process_job(job):
+#     """Simulate doing actual work. Real handlers come later."""
+#     print(f"    type={job.type}  priority={job.priority.value}")
+#     print(f"    payload={job.payload}")
+#     time.sleep(2)
 
 
 def claim_job(db, job_id):

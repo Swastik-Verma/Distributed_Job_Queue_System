@@ -114,3 +114,15 @@ stale entries. This project uses the PostgreSQL status column for that
 tracking instead: it is already durable and already the source of truth,
 so mirroring in-flight state in Redis adds little. The trade-off is a
 small window where the ID exists in neither place.
+
+
+## Scaling workers
+Workers are stateless — each runs the same loop, creates its own
+connections, coordinates only through Redis (BRPOP) and PostgreSQL
+(conditional claim). Scaling is changing the worker count; no code
+changes required. The launcher uses multiprocessing.Process to fork
+N identical workers from a single command.
+
+The conditional claim was tested under real concurrency: three workers
+racing for the same job ID, with only one succeeding. The losers
+detect 0 rows updated and skip gracefully.
