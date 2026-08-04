@@ -1,12 +1,13 @@
 import os
 import time
 from uuid import UUID
+from datetime import datetime, timezone
 
 import redis
 from dotenv import load_dotenv
 
 from app.database import SessionLocal
-from app.models import Job
+from app.models import Job, JobStatus
 
 load_dotenv()
 
@@ -20,10 +21,29 @@ def process_job(job):
     time.sleep(2)
 
 
+def claim_job(db, job_id):
+    """Try to claim the job by setting status to RUNNING.
+    Returns the job if claimed, None if someone else got it first."""
+    rows_updated = (
+        db.query(Job)
+        .filter(Job.id == job_id, Job.status == JobStatus.PENDING)
+        .update({
+            Job.status: JobStatus.RUNNING,
+            Job.updated_at: datetime.now(timezone.utc),
+        })
+    )
+    db.commit()
+
+    if rows_updated == 0:
+        print(f"[worker {os.getpid()}] SKIP {job_id} — already claimed or not PENDING")
+        return None
+
+    return db.query(Job).filter(Job.id == job_id).first()
+
+
 def run_worker():
     pid = os.getpid()
 
-    # Worker creates its own Redis connection — not shared with the API
     worker_redis = redis.Redis(
         host=os.getenv("REDIS_HOST"),
         port=int(os.getenv("REDIS_PORT")),
@@ -45,12 +65,12 @@ def run_worker():
 
         db = SessionLocal()
         try:
-            job = db.query(Job).filter(Job.id == UUID(job_id)).first()
+            job = claim_job(db, UUID(job_id))
 
             if job is None:
-                print(f"[worker {pid}] WARNING: {job_id} not found in PostgreSQL")
                 continue
 
+            print(f"[worker {pid}] CLAIMED {job_id} — status is now RUNNING")
             process_job(job)
             print(f"[worker {pid}] finished {job_id}\n")
         finally:
