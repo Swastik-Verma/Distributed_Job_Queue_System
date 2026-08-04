@@ -14,8 +14,9 @@ load_dotenv()
 QUEUE_NAMES = ["redis_queue:HIGH", "redis_queue:MEDIUM", "redis_queue:LOW"]
 
 
+
 def process_job(job):
-    """Pretend to do the actual work. Real handlers come later."""
+    """Simulate doing actual work. Real handlers come later."""
     print(f"    type={job.type}  priority={job.priority.value}")
     print(f"    payload={job.payload}")
     time.sleep(2)
@@ -39,6 +40,22 @@ def claim_job(db, job_id):
         return None
 
     return db.query(Job).filter(Job.id == job_id).first()
+
+
+def mark_success(db, job):
+    """Mark job as completed successfully."""
+    job.status = JobStatus.SUCCESS
+    job.updated_at = datetime.now(timezone.utc)
+    db.commit()
+
+
+def mark_failed(db, job, error):
+    """Mark job as failed and save the error message."""
+    job.status = JobStatus.FAILED
+    job.error_message = str(error)
+    job.retry_count += 1
+    job.updated_at = datetime.now(timezone.utc)
+    db.commit()
 
 
 def run_worker():
@@ -71,8 +88,15 @@ def run_worker():
                 continue
 
             print(f"[worker {pid}] CLAIMED {job_id} — status is now RUNNING")
-            process_job(job)
-            print(f"[worker {pid}] finished {job_id}\n")
+
+            try:
+                process_job(job)
+                mark_success(db, job)
+                print(f"[worker {pid}] ✓ SUCCESS {job_id}\n")
+            except Exception as e:
+                mark_failed(db, job, e)
+                print(f"[worker {pid}] ✗ FAILED {job_id} — {e}\n")
+
         finally:
             db.close()
 
