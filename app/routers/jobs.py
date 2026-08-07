@@ -7,6 +7,7 @@ from app.database import get_db
 from app.models import Job, JobStatus
 from app.schemas import JobCreate, JobResponse
 from app.redis_client import redis_client
+from app.config import REDIS_QUEUE_KEY, PRIORITY_SCORES
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
@@ -25,8 +26,8 @@ def create_job(job_data: JobCreate, db: Session = Depends(get_db)):
     db.refresh(new_job)
 
     # Push job ID into the matching Redis priority queue
-    queue_name = f"redis_queue:{new_job.priority.value}"
-    redis_client.lpush(queue_name, str(new_job.id))
+    score = PRIORITY_SCORES[new_job.priority.value]
+    redis_client.zadd(REDIS_QUEUE_KEY, {str(new_job.id): score})
 
     return new_job
 

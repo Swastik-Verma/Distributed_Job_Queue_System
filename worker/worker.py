@@ -2,6 +2,7 @@ import os
 import time
 from uuid import UUID
 from datetime import datetime, timezone
+from app.config import REDIS_QUEUE_KEY
 
 import redis
 from dotenv import load_dotenv
@@ -11,15 +12,14 @@ from app.models import Job, JobStatus
 
 load_dotenv()
 
-QUEUE_NAMES = ["redis_queue:HIGH", "redis_queue:MEDIUM", "redis_queue:LOW"]
+# QUEUE_NAMES = ["redis_queue:HIGH", "redis_queue:MEDIUM", "redis_queue:LOW"]
 
-def process_job(job):
+def process_job(job, pid):
     """Simulate doing actual work. Real handlers come later."""
     if job.type == "fail_test":
         raise Exception("Simulated failure: email server unreachable")
 
-    print(f"    type={job.type}  priority={job.priority.value}")
-    print(f"    payload={job.payload}")
+    print(f"[worker {pid}] : type={job.type},  priority={job.priority.value}, payload={job.payload}")
     time.sleep(2)
 
 
@@ -77,16 +77,16 @@ def run_worker():
         socket_connect_timeout=5,
     )
 
-    print(f"[worker {pid}] started, watching {len(QUEUE_NAMES)} queues")
+    print(f"[worker {pid}] started, watching queue {REDIS_QUEUE_KEY}")
 
     while True:
-        result = worker_redis.brpop(QUEUE_NAMES, timeout=5)
+        result = worker_redis.bzpopmin(REDIS_QUEUE_KEY, timeout=5)
 
         if result is None:
             continue
 
-        queue_name, job_id = result
-        print(f"[worker {pid}] picked {job_id} from {queue_name}")
+        queue_name, job_id, score = result
+        print(f"[worker {pid}] picked {job_id} (score={score}) from {queue_name}")
 
         db = SessionLocal()
         try:
@@ -98,7 +98,7 @@ def run_worker():
             print(f"[worker {pid}] CLAIMED {job_id} — status is now RUNNING")
 
             try:
-                process_job(job)
+                process_job(job, pid)
                 mark_success(db, job)
                 print(f"[worker {pid}] ✓ SUCCESS {job_id}\n")
             except Exception as e:
