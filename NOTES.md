@@ -126,3 +126,44 @@ N identical workers from a single command.
 The conditional claim was tested under real concurrency: three workers
 racing for the same job ID, with only one succeeding. The losers
 detect 0 rows updated and skip gracefully.
+
+## Redis Sorted Sets vs Lists for Priority Queues
+
+**Problem:** Three separate Redis Lists (HIGH/MEDIUM/LOW) with BRPOP 
+checking left-to-right causes priority starvation — LOW jobs never run 
+if HIGH jobs keep arriving.
+
+**Solution:** One Redis Sorted Set where each member is a job ID and 
+the score represents priority (lower = more urgent). BZPOPMIN replaces 
+BRPOP as the blocking pop command.
+
+**Key behavioral differences:**
+- Sorted Sets enforce unique members — ZADD on an existing member 
+  updates its score instead of adding a duplicate. Free dedup at the 
+  queue level.
+- ZPOPMIN alone still causes starvation (same as strict ordering). 
+  Weighted selection logic in the worker is needed to fix it.
+- Score gaps (1/5/10 instead of 1/2/3) leave room for future priority 
+  tiers without restructuring.
+
+**Commands:** ZADD (add), BZPOPMIN (blocking pop), ZRANGE WITHSCORES 
+(inspect), ZCARD (count), ZRANGEBYSCORE (filter by priority tier).
+
+## Starvation Fix: Weighted Selection vs Ageing
+
+Two approaches to prevent priority starvation:
+
+**Weighted selection:** Worker randomly picks a priority tier each cycle 
+using fixed weights (e.g. 60% HIGH, 30% MEDIUM, 10% LOW). Guarantees 
+throughput share per tier. Stateless — no background processes needed.
+
+**Ageing:** A job's effective priority increases the longer it waits, 
+eventually matching higher tiers. Guarantees latency — every job 
+eventually reaches the front. Requires either periodic score 
+recalculation (extra sweeper + Redis writes) or a time-encoding formula 
+that's hard to tune correctly.
+
+**Chose weighted selection** because it's stateless, deterministic, and 
+gives a clear answer to "what share of capacity does each tier get?" 
+Ageing is better suited to OS process schedulers where individual task 
+starvation matters more than tier-level throughput.
