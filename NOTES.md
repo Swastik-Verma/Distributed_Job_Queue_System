@@ -302,15 +302,8 @@ it idle a worker to preserve a ratio.
 
 ## Queue Observability
 
-Added GET /jobs/stats/queue reporting total queue depth and per-tier
-depth via ZCARD and ZCOUNT. Read-only — counts without popping.
+Added GET /jobs/stats/queue reporting total queue depth and per-tier depth via ZCARD and ZCOUNT. Read-only — counts without popping.
 
-Note that Redis queue depth and PostgreSQL PENDING count are two
-independent views that SHOULD agree. Divergence indicates the dual-write
-failure (committed to PostgreSQL, never reached Redis). Once the Week 5
-sweeper exists, comparing these two numbers becomes a system health check.
+Note that Redis queue depth and PostgreSQL PENDING count are two independent views that SHOULD agree. Divergence indicates the dual-write failure (committed to PostgreSQL, never reached Redis). Once the Week 5 sweeper exists, comparing these two numbers becomes a system health check.
 
-**FastAPI routing note:** the endpoint is /jobs/stats/queue rather than
-/jobs/stats because a single-segment route would be matched by the
-existing /jobs/{job_id} path-param route and fail UUID validation with
-a 422.
+**FastAPI routing note:** the endpoint is /jobs/stats/queue rather than /jobs/stats because a single-segment route would be matched by the existing /jobs/{job_id} path-param route and fail UUID validation with a 422.
