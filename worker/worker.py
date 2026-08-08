@@ -2,7 +2,7 @@ import os
 import time
 from uuid import UUID
 from datetime import datetime, timezone
-from app.config import REDIS_QUEUE_KEY, PRIORITY_SCORES
+from app.config import REDIS_QUEUE_KEY, PRIORITY_SCORES, WEIGHT_CYCLE
 
 import redis
 from dotenv import load_dotenv
@@ -10,15 +10,16 @@ from dotenv import load_dotenv
 from app.database import SessionLocal
 from app.models import Job, JobStatus
 
+
 load_dotenv()
 
 # QUEUE_NAMES = ["redis_queue:HIGH", "redis_queue:MEDIUM", "redis_queue:LOW"]
 
-WEIGHT_CYCLE = (
-    ["HIGH"] * 6 +
-    ["MEDIUM"] * 3 +
-    ["LOW"] * 1
-)
+# WEIGHT_CYCLE = (
+#     ["HIGH"] * 6 +
+#     ["MEDIUM"] * 3 +
+#     ["LOW"] * 1
+# )
 
 
 def pick_job_from_tier(worker_redis, tier):

@@ -54,6 +54,8 @@ pop an ID from Redis, then load the full job from PostgreSQL.
 - [x] Priority queues migrated from 3 Redis Lists to 1 Sorted Set
 - [x] Weighted round-robin selection prevents priority starvation
       (verified under load — see below)
+- [x] Priority weights configurable in one place (`app/config.py`)
+- [x] `GET /jobs/stats/queue` — live queue depth by priority tier
 
 ## Roadmap
 
@@ -121,3 +123,13 @@ Jobs are queued in a single Redis Sorted Set where the score encodes priority (H
 via ZRANGEBYSCORE + ZREM. If the scheduled tier is empty, the worker falls back to a global BZPOPMIN rather than idling.
 
 Verified under load: with 40 HIGH jobs and 3 LOW jobs pre-loaded, 2 out of 3 LOW jobs completed while HIGH jobs were still being processed. LOW jobs waited ~29s vs HIGH's ~11-37s range — slower by design, but not starved.
+
+Balanced load test (60 HIGH / 30 MEDIUM / 30 LOW):
+
+| Priority | Jobs | Avg wait | Max wait | Direct hits |
+|----------|------|----------|----------|-------------|
+| HIGH     | 60   | 78s      | 106s     | 42 (57%)    |
+| MEDIUM   | 30   | 93s      | 116s     | 21 (29%)    |
+| LOW      | 30   | 115s     | 130s     | 10 (14%)    |
+
+Target ratio 60/30/10 — measured 57/29/14. All tiers completed.

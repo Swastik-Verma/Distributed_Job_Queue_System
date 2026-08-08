@@ -9,3 +9,20 @@ PRIORITY_SCORES = {
     "MEDIUM": 5,
     "LOW": 10,
 }
+
+
+# Weighted round-robin cycle for priority selection.
+# Controls what SHARE of worker capacity each tier receives when
+# multiple tiers have jobs waiting. Tunable without touching worker logic.
+PRIORITY_WEIGHTS = {
+    "HIGH": 6,
+    "MEDIUM": 3,
+    "LOW": 1,
+}
+
+# Expanded into the actual cycle the worker walks
+WEIGHT_CYCLE = [
+    tier
+    for tier, weight in PRIORITY_WEIGHTS.items()
+    for _ in range(weight)
+]

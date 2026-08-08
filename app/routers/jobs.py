@@ -39,3 +39,19 @@ def get_job(job_id: UUID, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Job not found")
 
     return job
+
+
+@router.get("/stats/queue")
+def queue_stats():
+    """Current queue depth, broken down by priority tier."""
+    total = redis_client.zcard(REDIS_QUEUE_KEY)
+
+    by_priority = {}
+    for tier, score in PRIORITY_SCORES.items():
+        by_priority[tier] = redis_client.zcount(REDIS_QUEUE_KEY, score, score)
+
+    return {
+        "queue_key": REDIS_QUEUE_KEY,
+        "total_queued": total,
+        "by_priority": by_priority,
+    }

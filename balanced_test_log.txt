@@ -1,0 +1,553 @@
+[launcher] starting 10 workers (parent PID 34743)
+[launcher] started worker-1 (PID 34745)
+[launcher] started worker-2 (PID 34746)
+[launcher] started worker-3 (PID 34747)
+[launcher] started worker-4 (PID 34748)
+[launcher] started worker-5 (PID 34749)
+[worker 34747] started, watching queue: job_queue
+[launcher] started worker-6 (PID 34750)
+[launcher] started worker-7 (PID 34751)
+[worker 34745] started, watching queue: job_queue
+[worker 34746] started, watching queue: job_queue
+[worker 34749] started, watching queue: job_queue[worker 34748] started, watching queue: job_queue
+[launcher] started worker-8 (PID 34752)
+[launcher] started worker-9 (PID 34753)
+
+[launcher] started worker-10 (PID 34754)
+[launcher] all 10 workers running
+
+[worker 34750] started, watching queue: job_queue[worker 34751] started, watching queue: job_queue[worker 34746] picked 3841d0b1-620b-436a-a76c-29de9e4e42d0 (scheduled tier=HIGH, direct hit)
+[worker 34753] started, watching queue: job_queue
+
+[worker 34745] picked 4508e017-6377-42de-ab39-4bb0258a1136 (scheduled tier=HIGH, direct hit)
+[worker 34747] picked 49fc968a-8faf-49d0-bc3f-8917e52226c7 (scheduled tier=HIGH, direct hit)
+
+[worker 34748] picked 50207bd3-4c76-4e72-9d66-071af2641698 (scheduled tier=HIGH, direct hit)
+[worker 34753] picked 4b55a18a-29af-4d7b-9ad7-cb70429b87ba (scheduled tier=HIGH, direct hit)
+[worker 34752] started, watching queue: job_queue[worker 34749] picked 5bb0d8c1-0d26-455a-b5bc-0dbe8989a79d (scheduled tier=HIGH, but empty — fell back to global lowest score=1.0)
+
+[worker 34754] started, watching queue: job_queue
+[worker 34752] picked 5f95377d-7923-4db7-8d1d-9fc5e55ed992 (scheduled tier=HIGH, direct hit)
+[worker 34750] picked 6a269a3b-55ca-4278-91da-24515c352bbf (scheduled tier=HIGH, direct hit)
+[worker 34754] picked 650c4fe1-6b65-4f4a-8b7b-30ac59921c9d (scheduled tier=HIGH, direct hit)
+[worker 34751] picked 6ab4b7ed-eefc-4b55-96e9-f0f3588992e0 (scheduled tier=HIGH, direct hit)
+[worker 34753] CLAIMED 4b55a18a-29af-4d7b-9ad7-cb70429b87ba — status is now RUNNING
+[worker 34753] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_22'}
+[worker 34745] CLAIMED 4508e017-6377-42de-ab39-4bb0258a1136 — status is now RUNNING
+[worker 34745] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_38'}
+[worker 34748] CLAIMED 50207bd3-4c76-4e72-9d66-071af2641698 — status is now RUNNING
+[worker 34748] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_50'}
+[worker 34746] CLAIMED 3841d0b1-620b-436a-a76c-29de9e4e42d0 — status is now RUNNING
+[worker 34746] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_49'}
+[worker 34749] CLAIMED 5bb0d8c1-0d26-455a-b5bc-0dbe8989a79d — status is now RUNNING
+[worker 34749] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_57'}
+[worker 34750] CLAIMED 6a269a3b-55ca-4278-91da-24515c352bbf — status is now RUNNING[worker 34747] CLAIMED 49fc968a-8faf-49d0-bc3f-8917e52226c7 — status is now RUNNING
+[worker 34747] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_47'}
+
+[worker 34750] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_23'}
+[worker 34752] CLAIMED 5f95377d-7923-4db7-8d1d-9fc5e55ed992 — status is now RUNNING
+[worker 34752] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_9'}
+[worker 34754] CLAIMED 650c4fe1-6b65-4f4a-8b7b-30ac59921c9d — status is now RUNNING
+[worker 34754] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_54'}
+[worker 34751] CLAIMED 6ab4b7ed-eefc-4b55-96e9-f0f3588992e0 — status is now RUNNING
+[worker 34751] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_55'}
+[worker 34753] ✓ SUCCESS 4b55a18a-29af-4d7b-9ad7-cb70429b87ba
+
+[worker 34748] ✓ SUCCESS 50207bd3-4c76-4e72-9d66-071af2641698
+
+[worker 34753] picked 6e41454a-22bf-4c43-a624-4f4841cfc041 (scheduled tier=HIGH, direct hit)
+[worker 34745] ✓ SUCCESS 4508e017-6377-42de-ab39-4bb0258a1136
+
+[worker 34748] picked 740d7bd9-9670-4906-8288-b9e2bb3fbb6b (scheduled tier=HIGH, direct hit)
+[worker 34745] picked 77e703f9-b27d-4fb0-8f15-20fa83462fdc (scheduled tier=HIGH, direct hit)
+[worker 34753] CLAIMED 6e41454a-22bf-4c43-a624-4f4841cfc041 — status is now RUNNING
+[worker 34753] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_48'}
+[worker 34745] CLAIMED 77e703f9-b27d-4fb0-8f15-20fa83462fdc — status is now RUNNING
+[worker 34745] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_46'}
+[worker 34748] CLAIMED 740d7bd9-9670-4906-8288-b9e2bb3fbb6b — status is now RUNNING
+[worker 34748] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_20'}
+[worker 34746] ✓ SUCCESS 3841d0b1-620b-436a-a76c-29de9e4e42d0
+
+[worker 34746] picked 7a3780ef-b55d-48a5-8e25-dcf2c92fdaca (scheduled tier=HIGH, direct hit)
+[worker 34746] CLAIMED 7a3780ef-b55d-48a5-8e25-dcf2c92fdaca — status is now RUNNING
+[worker 34746] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_33'}
+[worker 34749] ✓ SUCCESS 5bb0d8c1-0d26-455a-b5bc-0dbe8989a79d
+
+[worker 34749] picked 7f4bf1f0-75a8-4998-9804-e485325229ac (scheduled tier=HIGH, direct hit)
+[worker 34747] ✓ SUCCESS 49fc968a-8faf-49d0-bc3f-8917e52226c7
+
+[worker 34752] ✓ SUCCESS 5f95377d-7923-4db7-8d1d-9fc5e55ed992
+
+[worker 34747] picked 81b2159c-5381-4a06-b762-b44af314fe94 (scheduled tier=HIGH, direct hit)
+[worker 34750] ✓ SUCCESS 6a269a3b-55ca-4278-91da-24515c352bbf
+
+[worker 34752] picked 85ba96f5-c1d2-4b19-8b79-90234cae4bba (scheduled tier=HIGH, direct hit)
+[worker 34750] picked 887d9527-83cc-4fd5-ab7e-c8d98adc02ff (scheduled tier=HIGH, but empty — fell back to global lowest score=1.0)
+[worker 34749] CLAIMED 7f4bf1f0-75a8-4998-9804-e485325229ac — status is now RUNNING
+[worker 34749] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_43'}
+[worker 34752] CLAIMED 85ba96f5-c1d2-4b19-8b79-90234cae4bba — status is now RUNNING
+[worker 34752] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_36'}
+[worker 34750] CLAIMED 887d9527-83cc-4fd5-ab7e-c8d98adc02ff — status is now RUNNING
+[worker 34750] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_39'}
+[worker 34754] ✓ SUCCESS 650c4fe1-6b65-4f4a-8b7b-30ac59921c9d
+
+[worker 34747] CLAIMED 81b2159c-5381-4a06-b762-b44af314fe94 — status is now RUNNING
+[worker 34747] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_15'}
+[worker 34754] picked 8a24eea9-ff8e-4315-975b-9a6602580ead (scheduled tier=HIGH, direct hit)
+[worker 34754] CLAIMED 8a24eea9-ff8e-4315-975b-9a6602580ead — status is now RUNNING
+[worker 34754] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_10'}
+[worker 34751] ✓ SUCCESS 6ab4b7ed-eefc-4b55-96e9-f0f3588992e0
+
+[worker 34751] picked 8dd5ede0-3383-4a98-9e84-02ae35d055c8 (scheduled tier=HIGH, direct hit)
+[worker 34751] CLAIMED 8dd5ede0-3383-4a98-9e84-02ae35d055c8 — status is now RUNNING
+[worker 34751] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_6'}
+[worker 34753] ✓ SUCCESS 6e41454a-22bf-4c43-a624-4f4841cfc041
+
+[worker 34745] ✓ SUCCESS 77e703f9-b27d-4fb0-8f15-20fa83462fdc
+[worker 34748] ✓ SUCCESS 740d7bd9-9670-4906-8288-b9e2bb3fbb6b
+
+
+[worker 34753] picked 9692a5f2-e3c3-4c2d-9875-96f7acb038fb (scheduled tier=HIGH, direct hit)
+[worker 34748] picked 96daca52-1683-4c66-aff5-6effe368ed73 (scheduled tier=HIGH, direct hit)
+[worker 34753] CLAIMED 9692a5f2-e3c3-4c2d-9875-96f7acb038fb — status is now RUNNING[worker 34748] CLAIMED 96daca52-1683-4c66-aff5-6effe368ed73 — status is now RUNNING
+[worker 34748] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_19'}
+
+[worker 34745] picked 979ac60f-ee1a-4c5b-afa7-85ec0acfc15d (scheduled tier=HIGH, but empty — fell back to global lowest score=1.0)
+[worker 34753] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_26'}
+[worker 34746] ✓ SUCCESS 7a3780ef-b55d-48a5-8e25-dcf2c92fdaca
+
+[worker 34746] picked 97d8e0e7-19dd-47db-bf38-6ad0ca6a524a (scheduled tier=HIGH, direct hit)
+[worker 34745] CLAIMED 979ac60f-ee1a-4c5b-afa7-85ec0acfc15d — status is now RUNNING
+[worker 34745] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_24'}
+[worker 34746] CLAIMED 97d8e0e7-19dd-47db-bf38-6ad0ca6a524a — status is now RUNNING
+[worker 34746] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_2'}
+[worker 34749] ✓ SUCCESS 7f4bf1f0-75a8-4998-9804-e485325229ac
+
+[worker 34749] picked aa818b65-d76e-43a8-9cf5-2ac412038fbd (scheduled tier=HIGH, direct hit)
+[worker 34750] ✓ SUCCESS 887d9527-83cc-4fd5-ab7e-c8d98adc02ff
+
+[worker 34750] picked ac1aa5fa-957c-4b21-8132-0a99bf6707b3 (scheduled tier=HIGH, direct hit)
+[worker 34752] ✓ SUCCESS 85ba96f5-c1d2-4b19-8b79-90234cae4bba
+
+[worker 34752] picked aed78361-95aa-4684-9b58-2b353e3bb376 (scheduled tier=HIGH, direct hit)
+[worker 34747] ✓ SUCCESS 81b2159c-5381-4a06-b762-b44af314fe94
+
+[worker 34747] picked b25335f5-6865-45a0-ab1b-db5e29ac00ba (scheduled tier=HIGH, direct hit)
+[worker 34749] CLAIMED aa818b65-d76e-43a8-9cf5-2ac412038fbd — status is now RUNNING
+[worker 34749] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_3'}
+[worker 34750] CLAIMED ac1aa5fa-957c-4b21-8132-0a99bf6707b3 — status is now RUNNING
+[worker 34750] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_8'}
+[worker 34754] ✓ SUCCESS 8a24eea9-ff8e-4315-975b-9a6602580ead
+
+[worker 34752] CLAIMED aed78361-95aa-4684-9b58-2b353e3bb376 — status is now RUNNING
+[worker 34752] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_45'}
+[worker 34754] picked b47b7584-a807-4e2d-a581-8a1bf89dd2c5 (scheduled tier=HIGH, direct hit)
+[worker 34747] CLAIMED b25335f5-6865-45a0-ab1b-db5e29ac00ba — status is now RUNNING
+[worker 34747] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_17'}
+[worker 34754] CLAIMED b47b7584-a807-4e2d-a581-8a1bf89dd2c5 — status is now RUNNING
+[worker 34754] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_40'}
+[worker 34751] ✓ SUCCESS 8dd5ede0-3383-4a98-9e84-02ae35d055c8
+
+[worker 34751] picked b4be742e-a20c-46c2-8a46-463e3570ed19 (scheduled tier=HIGH, direct hit)
+[worker 34751] CLAIMED b4be742e-a20c-46c2-8a46-463e3570ed19 — status is now RUNNING
+[worker 34751] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_7'}
+[worker 34748] ✓ SUCCESS 96daca52-1683-4c66-aff5-6effe368ed73
+
+[worker 34753] ✓ SUCCESS 9692a5f2-e3c3-4c2d-9875-96f7acb038fb
+[worker 34748] picked b83c823d-838b-4a0b-a0bd-9af2f10808a2 (scheduled tier=HIGH, direct hit)
+
+[worker 34753] picked b84ae1b6-c32f-434e-95fc-56a12622d8b4 (scheduled tier=HIGH, direct hit)
+[worker 34745] ✓ SUCCESS 979ac60f-ee1a-4c5b-afa7-85ec0acfc15d
+
+[worker 34745] picked bc2ca87c-882a-4f70-b0a3-967fef870c51 (scheduled tier=HIGH, direct hit)
+[worker 34746] ✓ SUCCESS 97d8e0e7-19dd-47db-bf38-6ad0ca6a524a
+
+[worker 34746] picked bd7c575b-a0b2-45a8-9329-9ad0e208d127 (scheduled tier=HIGH, direct hit)
+[worker 34753] CLAIMED b84ae1b6-c32f-434e-95fc-56a12622d8b4 — status is now RUNNING[worker 34748] CLAIMED b83c823d-838b-4a0b-a0bd-9af2f10808a2 — status is now RUNNING
+
+[worker 34753] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_53'}[worker 34748] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_12'}
+
+[worker 34745] CLAIMED bc2ca87c-882a-4f70-b0a3-967fef870c51 — status is now RUNNING
+[worker 34745] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_44'}
+[worker 34746] CLAIMED bd7c575b-a0b2-45a8-9329-9ad0e208d127 — status is now RUNNING
+[worker 34746] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_5'}
+[worker 34749] ✓ SUCCESS aa818b65-d76e-43a8-9cf5-2ac412038fbd
+
+[worker 34749] picked c0b80eb1-adc6-4d21-a444-e64a8b6c810c (scheduled tier=HIGH, direct hit)
+[worker 34750] ✓ SUCCESS ac1aa5fa-957c-4b21-8132-0a99bf6707b3
+
+[worker 34750] picked c7e82951-7288-4e78-b6e4-3e771c2c3678 (scheduled tier=HIGH, direct hit)
+[worker 34747] ✓ SUCCESS b25335f5-6865-45a0-ab1b-db5e29ac00ba
+[worker 34752] ✓ SUCCESS aed78361-95aa-4684-9b58-2b353e3bb376
+
+
+[worker 34747] picked ca9978a1-525e-4367-a755-0ed893deb1ee (scheduled tier=HIGH, direct hit)
+[worker 34752] picked ccba3e0c-53c5-4a78-b236-c7aedad42293 (scheduled tier=HIGH, but empty — fell back to global lowest score=1.0)
+[worker 34754] ✓ SUCCESS b47b7584-a807-4e2d-a581-8a1bf89dd2c5
+
+[worker 34754] picked d28df12f-b3d3-4231-b78f-05d9cacd2b88 (scheduled tier=HIGH, direct hit)
+[worker 34749] CLAIMED c0b80eb1-adc6-4d21-a444-e64a8b6c810c — status is now RUNNING
+[worker 34749] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_58'}
+[worker 34750] CLAIMED c7e82951-7288-4e78-b6e4-3e771c2c3678 — status is now RUNNING
+[worker 34750] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_28'}
+[worker 34752] CLAIMED ccba3e0c-53c5-4a78-b236-c7aedad42293 — status is now RUNNING
+[worker 34752] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_42'}
+[worker 34747] CLAIMED ca9978a1-525e-4367-a755-0ed893deb1ee — status is now RUNNING
+[worker 34747] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_59'}
+[worker 34751] ✓ SUCCESS b4be742e-a20c-46c2-8a46-463e3570ed19
+
+[worker 34751] picked d875db56-ca34-4939-8526-f00f978472e8 (scheduled tier=HIGH, direct hit)
+[worker 34754] CLAIMED d28df12f-b3d3-4231-b78f-05d9cacd2b88 — status is now RUNNING
+[worker 34754] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_14'}
+[worker 34751] CLAIMED d875db56-ca34-4939-8526-f00f978472e8 — status is now RUNNING
+[worker 34751] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_32'}
+[worker 34753] ✓ SUCCESS b84ae1b6-c32f-434e-95fc-56a12622d8b4
+
+[worker 34745] ✓ SUCCESS bc2ca87c-882a-4f70-b0a3-967fef870c51
+
+[worker 34748] ✓ SUCCESS b83c823d-838b-4a0b-a0bd-9af2f10808a2
+
+[worker 34746] ✓ SUCCESS bd7c575b-a0b2-45a8-9329-9ad0e208d127
+
+[worker 34745] picked e0496e46-fc4e-4042-9ca6-a7d2fc59558e (scheduled tier=HIGH, direct hit)
+[worker 34753] picked e20d86f7-90ea-405c-bd7a-88fbad2ae90a (scheduled tier=HIGH, direct hit)
+[worker 34748] picked e251e905-17fa-4013-bc5f-ca0c3a6a8303 (scheduled tier=HIGH, but empty — fell back to global lowest score=1.0)
+[worker 34747] ✓ SUCCESS ca9978a1-525e-4367-a755-0ed893deb1ee
+
+[worker 34750] ✓ SUCCESS c7e82951-7288-4e78-b6e4-3e771c2c3678
+
+[worker 34747] picked e822e2a0-5be2-4e81-aadd-c9e2fd6661cb (scheduled tier=HIGH, direct hit)
+[worker 34746] picked e5932435-a2d4-4b82-be6f-3c3e52b12632 (scheduled tier=HIGH, but empty — fell back to global lowest score=1.0)
+[worker 34749] ✓ SUCCESS c0b80eb1-adc6-4d21-a444-e64a8b6c810c
+
+[worker 34745] CLAIMED e0496e46-fc4e-4042-9ca6-a7d2fc59558e — status is now RUNNING
+[worker 34753] CLAIMED e20d86f7-90ea-405c-bd7a-88fbad2ae90a — status is now RUNNING
+[worker 34753] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_34'}
+[worker 34745] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_21'}
+[worker 34749] picked eb519f99-dd30-401e-a1e2-667c3d10d1ba (scheduled tier=HIGH, direct hit)
+[worker 34751] ✓ SUCCESS d875db56-ca34-4939-8526-f00f978472e8
+
+[worker 34752] ✓ SUCCESS ccba3e0c-53c5-4a78-b236-c7aedad42293
+
+[worker 34752] picked f2d8b07f-5469-4301-b6bb-e45951b8f1ce (scheduled tier=HIGH, direct hit)
+[worker 34751] picked f89f37db-6ca0-4ce6-b90f-a58810256b3c (scheduled tier=HIGH, but empty — fell back to global lowest score=1.0)
+[worker 34750] picked fa6dd358-553f-4da7-827f-c41af42a5c15 (scheduled tier=HIGH, direct hit)
+[worker 34754] ✓ SUCCESS d28df12f-b3d3-4231-b78f-05d9cacd2b88
+
+[worker 34748] CLAIMED e251e905-17fa-4013-bc5f-ca0c3a6a8303 — status is now RUNNING
+[worker 34748] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_51'}
+[worker 34749] CLAIMED eb519f99-dd30-401e-a1e2-667c3d10d1ba — status is now RUNNING
+[worker 34749] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_52'}
+[worker 34754] picked fb339cc4-7cce-4ca6-a060-f5ee63f59f0a (scheduled tier=HIGH, direct hit)
+[worker 34747] CLAIMED e822e2a0-5be2-4e81-aadd-c9e2fd6661cb — status is now RUNNING
+[worker 34747] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_31'}
+[worker 34746] CLAIMED e5932435-a2d4-4b82-be6f-3c3e52b12632 — status is now RUNNING
+[worker 34746] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_0'}
+[worker 34752] CLAIMED f2d8b07f-5469-4301-b6bb-e45951b8f1ce — status is now RUNNING
+[worker 34752] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_56'}
+[worker 34751] CLAIMED f89f37db-6ca0-4ce6-b90f-a58810256b3c — status is now RUNNING
+[worker 34751] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_30'}
+[worker 34750] CLAIMED fa6dd358-553f-4da7-827f-c41af42a5c15 — status is now RUNNING
+[worker 34750] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_4'}
+[worker 34754] CLAIMED fb339cc4-7cce-4ca6-a060-f5ee63f59f0a — status is now RUNNING
+[worker 34754] : type=fraud_check,  priority=HIGH, payload={'txn': 'high_27'}
+[worker 34745] ✓ SUCCESS e0496e46-fc4e-4042-9ca6-a7d2fc59558e
+
+[worker 34753] ✓ SUCCESS e20d86f7-90ea-405c-bd7a-88fbad2ae90a
+
+[worker 34753] picked 26235c8d-1bbd-4580-b016-a98a00ccf594 (scheduled tier=HIGH, but empty — fell back to global lowest score=5.0)
+[worker 34745] picked 2476045b-8c7a-4fcc-a54a-265fc369314c (scheduled tier=HIGH, but empty — fell back to global lowest score=5.0)
+[worker 34745] CLAIMED 2476045b-8c7a-4fcc-a54a-265fc369314c — status is now RUNNING
+[worker 34745] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_3.pdf'}
+[worker 34748] ✓ SUCCESS e251e905-17fa-4013-bc5f-ca0c3a6a8303
+
+[worker 34749] ✓ SUCCESS eb519f99-dd30-401e-a1e2-667c3d10d1ba
+
+[worker 34753] CLAIMED 26235c8d-1bbd-4580-b016-a98a00ccf594 — status is now RUNNING
+[worker 34748] picked 2c52b3e5-4260-4c2d-a047-e0e95a201c7b (scheduled tier=HIGH, but empty — fell back to global lowest score=5.0)
+[worker 34753] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_22.pdf'}
+[worker 34747] ✓ SUCCESS e822e2a0-5be2-4e81-aadd-c9e2fd6661cb
+
+[worker 34749] picked 3572c93b-3943-4f89-a1ab-24a6c20b0f09 (scheduled tier=HIGH, but empty — fell back to global lowest score=5.0)
+[worker 34746] ✓ SUCCESS e5932435-a2d4-4b82-be6f-3c3e52b12632
+
+[worker 34746] picked 3b1f9a1c-b493-4e34-887c-48149860851b (scheduled tier=HIGH, but empty — fell back to global lowest score=5.0)
+[worker 34747] picked 36b4b866-a397-4da4-aaa8-0fc67aa73992 (scheduled tier=HIGH, but empty — fell back to global lowest score=5.0)
+[worker 34748] CLAIMED 2c52b3e5-4260-4c2d-a047-e0e95a201c7b — status is now RUNNING
+[worker 34748] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_21.pdf'}
+[worker 34752] ✓ SUCCESS f2d8b07f-5469-4301-b6bb-e45951b8f1ce
+
+[worker 34750] ✓ SUCCESS fa6dd358-553f-4da7-827f-c41af42a5c15
+
+[worker 34749] CLAIMED 3572c93b-3943-4f89-a1ab-24a6c20b0f09 — status is now RUNNING
+[worker 34749] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_12.pdf'}
+[worker 34754] ✓ SUCCESS fb339cc4-7cce-4ca6-a060-f5ee63f59f0a
+
+[worker 34746] CLAIMED 3b1f9a1c-b493-4e34-887c-48149860851b — status is now RUNNING
+[worker 34751] ✓ SUCCESS f89f37db-6ca0-4ce6-b90f-a58810256b3c
+
+[worker 34746] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_7.pdf'}
+[worker 34754] picked 4bacbe57-e139-4ae2-a312-ca2806c5f15b (scheduled tier=HIGH, but empty — fell back to global lowest score=5.0)
+[worker 34752] picked 4da0d652-72ba-40e4-a1d5-e7f13eb113d7 (scheduled tier=HIGH, but empty — fell back to global lowest score=5.0)
+[worker 34750] picked 5089484f-8d17-4982-9c25-18478402e09f (scheduled tier=HIGH, but empty — fell back to global lowest score=5.0)
+[worker 34747] CLAIMED 36b4b866-a397-4da4-aaa8-0fc67aa73992 — status is now RUNNING
+[worker 34747] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_4.pdf'}
+[worker 34751] picked 6d34e5e7-5f59-47c9-a5ef-12b743f0ed7d (scheduled tier=HIGH, but empty — fell back to global lowest score=5.0)
+[worker 34754] CLAIMED 4bacbe57-e139-4ae2-a312-ca2806c5f15b — status is now RUNNING
+[worker 34754] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_9.pdf'}
+[worker 34752] CLAIMED 4da0d652-72ba-40e4-a1d5-e7f13eb113d7 — status is now RUNNING
+[worker 34752] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_29.pdf'}
+[worker 34750] CLAIMED 5089484f-8d17-4982-9c25-18478402e09f — status is now RUNNING
+[worker 34750] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_16.pdf'}
+[worker 34751] CLAIMED 6d34e5e7-5f59-47c9-a5ef-12b743f0ed7d — status is now RUNNING
+[worker 34751] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_18.pdf'}
+[worker 34745] ✓ SUCCESS 2476045b-8c7a-4fcc-a54a-265fc369314c
+
+[worker 34753] ✓ SUCCESS 26235c8d-1bbd-4580-b016-a98a00ccf594
+
+[worker 34753] picked 7664378a-f355-47aa-ad55-50c7593fd8d7 (scheduled tier=MEDIUM, direct hit)
+[worker 34745] picked 7ad396f6-f739-4533-9356-b2ea9d279b85 (scheduled tier=MEDIUM, but empty — fell back to global lowest score=5.0)
+[worker 34748] ✓ SUCCESS 2c52b3e5-4260-4c2d-a047-e0e95a201c7b
+
+[worker 34748] picked 86af5e52-daf9-42b7-b012-870d1b556649 (scheduled tier=MEDIUM, direct hit)
+[worker 34752] ✓ SUCCESS 4da0d652-72ba-40e4-a1d5-e7f13eb113d7
+
+[worker 34754] ✓ SUCCESS 4bacbe57-e139-4ae2-a312-ca2806c5f15b
+
+[worker 34754] picked 9b97cbc7-b82f-4e65-aa50-7198f2219ca6 (scheduled tier=MEDIUM, direct hit)
+[worker 34753] CLAIMED 7664378a-f355-47aa-ad55-50c7593fd8d7 — status is now RUNNING
+[worker 34753] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_6.pdf'}
+[worker 34752] picked a0eba7ba-ca7b-4fbe-9aad-cbd4cb28c99b (scheduled tier=MEDIUM, but empty — fell back to global lowest score=5.0)
+[worker 34745] CLAIMED 7ad396f6-f739-4533-9356-b2ea9d279b85 — status is now RUNNING
+[worker 34747] ✓ SUCCESS 36b4b866-a397-4da4-aaa8-0fc67aa73992
+
+[worker 34745] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_15.pdf'}
+[worker 34747] picked a19c80a8-7344-486e-992a-41525e6a14cb (scheduled tier=MEDIUM, direct hit)
+[worker 34746] ✓ SUCCESS 3b1f9a1c-b493-4e34-887c-48149860851b
+
+[worker 34749] ✓ SUCCESS 3572c93b-3943-4f89-a1ab-24a6c20b0f09
+
+[worker 34752] CLAIMED a0eba7ba-ca7b-4fbe-9aad-cbd4cb28c99b — status is now RUNNING
+[worker 34752] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_14.pdf'}
+[worker 34751] ✓ SUCCESS 6d34e5e7-5f59-47c9-a5ef-12b743f0ed7d
+
+[worker 34748] CLAIMED 86af5e52-daf9-42b7-b012-870d1b556649 — status is now RUNNING
+[worker 34748] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_24.pdf'}
+[worker 34749] picked abccb443-7715-4db9-b12c-bf9373422c89 (scheduled tier=MEDIUM, direct hit)
+[worker 34746] picked abfbb884-61e6-41ed-98eb-726180eab211 (scheduled tier=MEDIUM, direct hit)
+[worker 34751] picked b4c79d52-8e1f-4621-9121-15fdb3bb5972 (scheduled tier=MEDIUM, but empty — fell back to global lowest score=5.0)
+[worker 34750] ✓ SUCCESS 5089484f-8d17-4982-9c25-18478402e09f
+
+[worker 34750] picked b882a2eb-a4db-4ffc-99a4-64f291302457 (scheduled tier=MEDIUM, direct hit)
+[worker 34754] CLAIMED 9b97cbc7-b82f-4e65-aa50-7198f2219ca6 — status is now RUNNING
+[worker 34754] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_20.pdf'}
+[worker 34747] CLAIMED a19c80a8-7344-486e-992a-41525e6a14cb — status is now RUNNING
+[worker 34747] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_19.pdf'}
+[worker 34746] CLAIMED abfbb884-61e6-41ed-98eb-726180eab211 — status is now RUNNING
+[worker 34746] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_5.pdf'}
+[worker 34751] CLAIMED b4c79d52-8e1f-4621-9121-15fdb3bb5972 — status is now RUNNING
+[worker 34751] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_23.pdf'}
+[worker 34750] CLAIMED b882a2eb-a4db-4ffc-99a4-64f291302457 — status is now RUNNING
+[worker 34750] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_0.pdf'}
+[worker 34749] CLAIMED abccb443-7715-4db9-b12c-bf9373422c89 — status is now RUNNING
+[worker 34749] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_8.pdf'}
+[worker 34753] ✓ SUCCESS 7664378a-f355-47aa-ad55-50c7593fd8d7
+
+[worker 34752] ✓ SUCCESS a0eba7ba-ca7b-4fbe-9aad-cbd4cb28c99b
+
+[worker 34752] picked c32a9161-a725-4f42-862f-6b3c132d21ff (scheduled tier=MEDIUM, direct hit)
+[worker 34753] picked c9fae2ad-8d2c-4641-a7e1-c40487b4ecec (scheduled tier=MEDIUM, direct hit)
+[worker 34754] ✓ SUCCESS 9b97cbc7-b82f-4e65-aa50-7198f2219ca6
+
+[worker 34745] ✓ SUCCESS 7ad396f6-f739-4533-9356-b2ea9d279b85
+
+[worker 34745] picked d2e58d25-de10-4786-908e-b077de6aab6f (scheduled tier=MEDIUM, direct hit)
+[worker 34750] ✓ SUCCESS b882a2eb-a4db-4ffc-99a4-64f291302457
+
+[worker 34746] ✓ SUCCESS abfbb884-61e6-41ed-98eb-726180eab211
+
+[worker 34747] ✓ SUCCESS a19c80a8-7344-486e-992a-41525e6a14cb
+
+[worker 34751] ✓ SUCCESS b4c79d52-8e1f-4621-9121-15fdb3bb5972
+
+[worker 34749] ✓ SUCCESS abccb443-7715-4db9-b12c-bf9373422c89
+
+[worker 34748] ✓ SUCCESS 86af5e52-daf9-42b7-b012-870d1b556649
+
+[worker 34754] picked dd73184b-19c9-47e6-943d-a7347607776f (scheduled tier=MEDIUM, direct hit)
+[worker 34747] picked ff824e37-6a9d-40f2-8ded-0022a6ef8441 (scheduled tier=MEDIUM, but empty — fell back to global lowest score=5.0)
+[worker 34746] picked fe4a8ab6-e36f-469d-9f41-63967280da7f (scheduled tier=MEDIUM, but empty — fell back to global lowest score=5.0)
+[worker 34750] picked ea935b7d-58e6-420c-bce8-b76c3fb77f44 (scheduled tier=MEDIUM, but empty — fell back to global lowest score=5.0)
+[worker 34751] picked 0b0516eb-5a25-4293-ae1c-22d335fb55da (scheduled tier=MEDIUM, but empty — fell back to global lowest score=10.0)
+[worker 34753] CLAIMED c9fae2ad-8d2c-4641-a7e1-c40487b4ecec — status is now RUNNING
+[worker 34753] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_13.pdf'}
+[worker 34752] CLAIMED c32a9161-a725-4f42-862f-6b3c132d21ff — status is now RUNNING
+[worker 34752] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_1.pdf'}
+[worker 34748] picked 0ec2ffa2-69e3-4616-b445-0b47ce4ac876 (scheduled tier=MEDIUM, but empty — fell back to global lowest score=10.0)
+[worker 34749] picked 04b718f4-e5eb-4459-9f91-df6ef57d55fd (scheduled tier=MEDIUM, but empty — fell back to global lowest score=10.0)
+[worker 34745] CLAIMED d2e58d25-de10-4786-908e-b077de6aab6f — status is now RUNNING
+[worker 34745] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_2.pdf'}
+[worker 34747] CLAIMED ff824e37-6a9d-40f2-8ded-0022a6ef8441 — status is now RUNNING
+[worker 34747] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_10.pdf'}
+[worker 34754] CLAIMED dd73184b-19c9-47e6-943d-a7347607776f — status is now RUNNING
+[worker 34754] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_17.pdf'}
+[worker 34750] CLAIMED ea935b7d-58e6-420c-bce8-b76c3fb77f44 — status is now RUNNING[worker 34746] CLAIMED fe4a8ab6-e36f-469d-9f41-63967280da7f — status is now RUNNING
+
+[worker 34750] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_26.pdf'}
+[worker 34746] : type=generate_pdf,  priority=MEDIUM, payload={'file': 'doc_25.pdf'}
+[worker 34748] CLAIMED 0ec2ffa2-69e3-4616-b445-0b47ce4ac876 — status is now RUNNING[worker 34749] CLAIMED 04b718f4-e5eb-4459-9f91-df6ef57d55fd — status is now RUNNING
+
+[worker 34748] : type=cleanup_logs,  priority=LOW, payload={'batch': 8}
+[worker 34749] : type=cleanup_logs,  priority=LOW, payload={'batch': 15}
+[worker 34751] CLAIMED 0b0516eb-5a25-4293-ae1c-22d335fb55da — status is now RUNNING
+[worker 34751] : type=cleanup_logs,  priority=LOW, payload={'batch': 13}
+[worker 34753] ✓ SUCCESS c9fae2ad-8d2c-4641-a7e1-c40487b4ecec
+
+[worker 34752] ✓ SUCCESS c32a9161-a725-4f42-862f-6b3c132d21ff
+
+[worker 34752] picked 1be8fa94-93d6-4ee5-bd3b-182df924be29 (scheduled tier=MEDIUM, but empty — fell back to global lowest score=10.0)
+[worker 34753] picked 19bd6b7f-7fba-4389-bc70-1017bb2f245d (scheduled tier=MEDIUM, but empty — fell back to global lowest score=10.0)
+[worker 34745] ✓ SUCCESS d2e58d25-de10-4786-908e-b077de6aab6f
+
+[worker 34745] picked 24b22b81-f476-4d0c-bbc6-7603275cee36 (scheduled tier=MEDIUM, but empty — fell back to global lowest score=10.0)
+[worker 34753] CLAIMED 19bd6b7f-7fba-4389-bc70-1017bb2f245d — status is now RUNNING
+[worker 34752] CLAIMED 1be8fa94-93d6-4ee5-bd3b-182df924be29 — status is now RUNNING
+[worker 34753] : type=cleanup_logs,  priority=LOW, payload={'batch': 0}
+[worker 34752] : type=cleanup_logs,  priority=LOW, payload={'batch': 20}
+[worker 34745] CLAIMED 24b22b81-f476-4d0c-bbc6-7603275cee36 — status is now RUNNING
+[worker 34745] : type=cleanup_logs,  priority=LOW, payload={'batch': 9}
+[worker 34747] ✓ SUCCESS ff824e37-6a9d-40f2-8ded-0022a6ef8441
+
+[worker 34747] picked 52e4dc67-a6c8-4415-92ae-52fec28e6e10 (scheduled tier=MEDIUM, but empty — fell back to global lowest score=10.0)
+[worker 34748] ✓ SUCCESS 0ec2ffa2-69e3-4616-b445-0b47ce4ac876
+
+[worker 34748] picked 5f2e949f-9faf-4a7a-9e3f-40d0c22c8045 (scheduled tier=MEDIUM, but empty — fell back to global lowest score=10.0)
+[worker 34751] ✓ SUCCESS 0b0516eb-5a25-4293-ae1c-22d335fb55da
+
+[worker 34751] picked 63278563-6a1b-4290-bd5a-f4175e432a05 (scheduled tier=MEDIUM, but empty — fell back to global lowest score=10.0)
+[worker 34746] ✓ SUCCESS fe4a8ab6-e36f-469d-9f41-63967280da7f
+
+[worker 34749] ✓ SUCCESS 04b718f4-e5eb-4459-9f91-df6ef57d55fd
+
+[worker 34747] CLAIMED 52e4dc67-a6c8-4415-92ae-52fec28e6e10 — status is now RUNNING
+[worker 34747] : type=cleanup_logs,  priority=LOW, payload={'batch': 4}
+[worker 34749] picked 669f968f-24ec-49ed-826d-82d24f46b5f9 (scheduled tier=MEDIUM, but empty — fell back to global lowest score=10.0)
+[worker 34746] picked 6f3d6a33-8405-4193-9dbd-373016851cc1 (scheduled tier=MEDIUM, but empty — fell back to global lowest score=10.0)
+[worker 34754] ✓ SUCCESS dd73184b-19c9-47e6-943d-a7347607776f
+
+[worker 34750] ✓ SUCCESS ea935b7d-58e6-420c-bce8-b76c3fb77f44
+
+[worker 34754] picked 7037249c-8360-42d5-9e7d-a61db028e73e (scheduled tier=MEDIUM, but empty — fell back to global lowest score=10.0)
+[worker 34750] picked 7166e702-581a-4a4d-bf15-6c3ae18578dc (scheduled tier=MEDIUM, but empty — fell back to global lowest score=10.0)
+[worker 34748] CLAIMED 5f2e949f-9faf-4a7a-9e3f-40d0c22c8045 — status is now RUNNING
+[worker 34748] : type=cleanup_logs,  priority=LOW, payload={'batch': 6}
+[worker 34751] CLAIMED 63278563-6a1b-4290-bd5a-f4175e432a05 — status is now RUNNING
+[worker 34751] : type=cleanup_logs,  priority=LOW, payload={'batch': 11}
+[worker 34749] CLAIMED 669f968f-24ec-49ed-826d-82d24f46b5f9 — status is now RUNNING
+[worker 34749] : type=cleanup_logs,  priority=LOW, payload={'batch': 16}
+[worker 34750] CLAIMED 7166e702-581a-4a4d-bf15-6c3ae18578dc — status is now RUNNING[worker 34746] CLAIMED 6f3d6a33-8405-4193-9dbd-373016851cc1 — status is now RUNNING
+
+[worker 34750] : type=cleanup_logs,  priority=LOW, payload={'batch': 18}
+[worker 34746] : type=cleanup_logs,  priority=LOW, payload={'batch': 29}
+[worker 34754] CLAIMED 7037249c-8360-42d5-9e7d-a61db028e73e — status is now RUNNING
+[worker 34754] : type=cleanup_logs,  priority=LOW, payload={'batch': 21}
+[worker 34753] ✓ SUCCESS 19bd6b7f-7fba-4389-bc70-1017bb2f245d
+
+[worker 34745] ✓ SUCCESS 24b22b81-f476-4d0c-bbc6-7603275cee36
+
+[worker 34753] picked 72bd4e8b-10b6-4eea-bc28-b3f0fff4e027 (scheduled tier=LOW, direct hit)
+[worker 34752] ✓ SUCCESS 1be8fa94-93d6-4ee5-bd3b-182df924be29
+
+[worker 34745] picked 7603d1f5-f269-472a-8d19-92ebb8035cf7 (scheduled tier=LOW, direct hit)
+[worker 34752] picked 7e7f4d87-643d-4907-8f5f-cf069ff136a6 (scheduled tier=LOW, but empty — fell back to global lowest score=10.0)
+[worker 34753] CLAIMED 72bd4e8b-10b6-4eea-bc28-b3f0fff4e027 — status is now RUNNING
+[worker 34753] : type=cleanup_logs,  priority=LOW, payload={'batch': 5}
+[worker 34745] CLAIMED 7603d1f5-f269-472a-8d19-92ebb8035cf7 — status is now RUNNING
+[worker 34745] : type=cleanup_logs,  priority=LOW, payload={'batch': 2}
+[worker 34752] CLAIMED 7e7f4d87-643d-4907-8f5f-cf069ff136a6 — status is now RUNNING
+[worker 34752] : type=cleanup_logs,  priority=LOW, payload={'batch': 14}
+[worker 34747] ✓ SUCCESS 52e4dc67-a6c8-4415-92ae-52fec28e6e10
+
+[worker 34747] picked 7fb0f5aa-9d12-4144-8690-08d4dfd723d9 (scheduled tier=LOW, direct hit)
+[worker 34751] ✓ SUCCESS 63278563-6a1b-4290-bd5a-f4175e432a05
+
+[worker 34749] ✓ SUCCESS 669f968f-24ec-49ed-826d-82d24f46b5f9
+
+[worker 34749] picked 97a11348-04ef-4822-b835-2c25cd80625f (scheduled tier=LOW, direct hit)
+[worker 34751] picked 9dadd580-90d3-46b9-bf57-2a8939e4b10e (scheduled tier=LOW, direct hit)
+[worker 34748] ✓ SUCCESS 5f2e949f-9faf-4a7a-9e3f-40d0c22c8045
+
+[worker 34748] picked a6e127ab-8281-4a36-baa1-ae58dce82dd9 (scheduled tier=LOW, direct hit)
+[worker 34754] ✓ SUCCESS 7037249c-8360-42d5-9e7d-a61db028e73e
+
+[worker 34750] ✓ SUCCESS 7166e702-581a-4a4d-bf15-6c3ae18578dc
+
+[worker 34754] picked a8108933-e317-40eb-8591-3861232bbad7 (scheduled tier=LOW, direct hit)
+[worker 34750] picked b4d715ac-f7a1-4d6a-bea1-c4db39853b12 (scheduled tier=LOW, direct hit)[worker 34746] ✓ SUCCESS 6f3d6a33-8405-4193-9dbd-373016851cc1
+
+
+[worker 34751] CLAIMED 9dadd580-90d3-46b9-bf57-2a8939e4b10e — status is now RUNNING
+[worker 34751] : type=cleanup_logs,  priority=LOW, payload={'batch': 3}
+[worker 34746] picked b53c7d1e-2159-41b5-8378-2404a65aba74 (scheduled tier=LOW, direct hit)
+[worker 34747] CLAIMED 7fb0f5aa-9d12-4144-8690-08d4dfd723d9 — status is now RUNNING
+[worker 34747] : type=cleanup_logs,  priority=LOW, payload={'batch': 23}
+[worker 34749] CLAIMED 97a11348-04ef-4822-b835-2c25cd80625f — status is now RUNNING
+[worker 34749] : type=cleanup_logs,  priority=LOW, payload={'batch': 12}
+[worker 34750] CLAIMED b4d715ac-f7a1-4d6a-bea1-c4db39853b12 — status is now RUNNING
+[worker 34750] : type=cleanup_logs,  priority=LOW, payload={'batch': 19}
+[worker 34754] CLAIMED a8108933-e317-40eb-8591-3861232bbad7 — status is now RUNNING
+[worker 34754] : type=cleanup_logs,  priority=LOW, payload={'batch': 26}
+[worker 34748] CLAIMED a6e127ab-8281-4a36-baa1-ae58dce82dd9 — status is now RUNNING
+[worker 34748] : type=cleanup_logs,  priority=LOW, payload={'batch': 28}
+[worker 34746] CLAIMED b53c7d1e-2159-41b5-8378-2404a65aba74 — status is now RUNNING
+[worker 34746] : type=cleanup_logs,  priority=LOW, payload={'batch': 1}
+[worker 34745] ✓ SUCCESS 7603d1f5-f269-472a-8d19-92ebb8035cf7
+
+[worker 34745] picked d51c2e5a-444d-4e8a-8ad4-d641a86685f3 (scheduled tier=HIGH, but empty — fell back to global lowest score=10.0)
+[worker 34752] ✓ SUCCESS 7e7f4d87-643d-4907-8f5f-cf069ff136a6
+
+[worker 34753] ✓ SUCCESS 72bd4e8b-10b6-4eea-bc28-b3f0fff4e027
+
+[worker 34753] picked db4856d1-2891-4f93-b7bf-4d59003db2ef (scheduled tier=HIGH, but empty — fell back to global lowest score=10.0)
+[worker 34752] picked d5b32f71-4bd5-4c9a-a91f-e3617873d7aa (scheduled tier=HIGH, but empty — fell back to global lowest score=10.0)
+[worker 34752] CLAIMED d5b32f71-4bd5-4c9a-a91f-e3617873d7aa — status is now RUNNING
+[worker 34745] CLAIMED d51c2e5a-444d-4e8a-8ad4-d641a86685f3 — status is now RUNNING
+[worker 34745] : type=cleanup_logs,  priority=LOW, payload={'batch': 27}
+[worker 34752] : type=cleanup_logs,  priority=LOW, payload={'batch': 7}
+[worker 34753] CLAIMED db4856d1-2891-4f93-b7bf-4d59003db2ef — status is now RUNNING
+[worker 34753] : type=cleanup_logs,  priority=LOW, payload={'batch': 24}
+[worker 34751] ✓ SUCCESS 9dadd580-90d3-46b9-bf57-2a8939e4b10e
+
+[worker 34751] picked e407df1e-1ad6-483e-8b88-6eb81c20076e (scheduled tier=HIGH, but empty — fell back to global lowest score=10.0)
+[worker 34747] ✓ SUCCESS 7fb0f5aa-9d12-4144-8690-08d4dfd723d9
+
+[worker 34747] picked ecb861fb-15ab-4ba2-8ff1-a8f14ed7b6c8 (scheduled tier=HIGH, but empty — fell back to global lowest score=10.0)
+[worker 34751] CLAIMED e407df1e-1ad6-483e-8b88-6eb81c20076e — status is now RUNNING
+[worker 34751] : type=cleanup_logs,  priority=LOW, payload={'batch': 25}
+[worker 34747] CLAIMED ecb861fb-15ab-4ba2-8ff1-a8f14ed7b6c8 — status is now RUNNING
+[worker 34747] : type=cleanup_logs,  priority=LOW, payload={'batch': 17}
+[worker 34749] ✓ SUCCESS 97a11348-04ef-4822-b835-2c25cd80625f
+
+[worker 34749] picked f2e94b22-0286-40ee-8679-84ac58a90370 (scheduled tier=HIGH, but empty — fell back to global lowest score=10.0)
+[worker 34749] CLAIMED f2e94b22-0286-40ee-8679-84ac58a90370 — status is now RUNNING
+[worker 34749] : type=cleanup_logs,  priority=LOW, payload={'batch': 10}
+[worker 34750] ✓ SUCCESS b4d715ac-f7a1-4d6a-bea1-c4db39853b12
+
+[worker 34754] ✓ SUCCESS a8108933-e317-40eb-8591-3861232bbad7
+
+[worker 34748] ✓ SUCCESS a6e127ab-8281-4a36-baa1-ae58dce82dd9
+
+[worker 34746] ✓ SUCCESS b53c7d1e-2159-41b5-8378-2404a65aba74
+
+[worker 34745] ✓ SUCCESS d51c2e5a-444d-4e8a-8ad4-d641a86685f3
+
+[worker 34752] ✓ SUCCESS d5b32f71-4bd5-4c9a-a91f-e3617873d7aa
+
+[worker 34753] ✓ SUCCESS db4856d1-2891-4f93-b7bf-4d59003db2ef
+
+[worker 34751] ✓ SUCCESS e407df1e-1ad6-483e-8b88-6eb81c20076e
+
+[worker 34749] ✓ SUCCESS f2e94b22-0286-40ee-8679-84ac58a90370
+[worker 34747] ✓ SUCCESS ecb861fb-15ab-4ba2-8ff1-a8f14ed7b6c8
+
+

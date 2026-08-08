@@ -279,3 +279,38 @@ fell back. The ratio is followed in intent; demand determines results.
 as fast as it fills, no backlog forms, and weighted vs unweighted 
 strategies produce identical results. Starvation only becomes observable 
 under sustained backlog pressure.
+
+
+## Weighted Selection: Balanced Load Measurement
+
+Day 25's test (40 HIGH / 0 MEDIUM / 3 LOW) proved starvation prevention
+but could not measure the throughput ratio — MEDIUM had no demand and
+LOW ran dry immediately, so most non-HIGH turns fell back.
+
+Re-tested with balanced demand (60 HIGH / 30 MEDIUM / 30 LOW) so no
+tier runs dry mid-run. With all tiers populated, direct hits track the
+configured 6:3:1 split and the fallback rate drops sharply.
+
+**Key insight:** fallback frequency is a signal of tier IMBALANCE, not
+a defect. High fallback rate means some tier has no demand; low fallback
+rate means all tiers are competing and the weighting is doing real work.
+
+**Ratio is intention, not outcome.** The cycle guarantees which tier a
+worker TARGETS. What it actually gets depends on available demand. A
+weighting scheme cannot manufacture jobs for an empty tier — nor should
+it idle a worker to preserve a ratio.
+
+## Queue Observability
+
+Added GET /jobs/stats/queue reporting total queue depth and per-tier
+depth via ZCARD and ZCOUNT. Read-only — counts without popping.
+
+Note that Redis queue depth and PostgreSQL PENDING count are two
+independent views that SHOULD agree. Divergence indicates the dual-write
+failure (committed to PostgreSQL, never reached Redis). Once the Week 5
+sweeper exists, comparing these two numbers becomes a system health check.
+
+**FastAPI routing note:** the endpoint is /jobs/stats/queue rather than
+/jobs/stats because a single-segment route would be matched by the
+existing /jobs/{job_id} path-param route and fail UUID validation with
+a 422.
