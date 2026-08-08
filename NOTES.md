@@ -167,3 +167,76 @@ that's hard to tune correctly.
 gives a clear answer to "what share of capacity does each tier get?" 
 Ageing is better suited to OS process schedulers where individual task 
 starvation matters more than tier-level throughput.
+
+## Weighted Selection Implementation
+
+**Mechanism:** Worker maintains a local `cycle_index` and walks a fixed 
+weight cycle (6xHIGH, 3xMEDIUM, 1xLOW = 60/30/10 split) to decide which 
+tier to target on each pop, instead of always taking the global minimum 
+score.
+
+**Popping a specific tier:** Redis has no atomic "pop min within score 
+range" command, so this is simulated with ZRANGEBYSCORE (read a 
+candidate) + ZREM (attempt removal). ZREM's return value (1 or 0) acts 
+as a compare-and-swap check — same pattern as the conditional claim 
+already used against PostgreSQL (Day 17), just applied to Redis. At 
+most one worker can successfully ZREM a given member.
+
+**Fallback for empty scheduled tier:** If the cycle says "try HIGH" but 
+HIGH is empty, the worker doesn't idle — it falls back to BZPOPMIN 
+(global lowest score) so it stays productive whenever ANY work exists. 
+Weighting is only meaningful when multiple tiers have jobs simultaneously 
+waiting; an empty tier should never block a worker from picking up 
+other available work.
+
+**Why round-robin over random weighted choice:** Deterministic — 
+pop #7 in a worker's local sequence is always predictable, making the 
+mechanism easy to test and reason about, versus random.choices which 
+gives the same long-run ratio but with unpredictable short-term variance.
+
+## Idempotency: The Deliberately Unbuilt Third Layer
+
+**The gap:** A worker completes real work (sends an email, charges a card) 
+and then crashes before writing SUCCESS to PostgreSQL. The job stays 
+RUNNING. The Week 5 sweeper detects the stale RUNNING status and 
+re-queues it — correct behavior for a crashed worker — but the side 
+effect now happens twice.
+
+**Why the existing two layers don't cover it:**
+- Conditional claim (UPDATE ... WHERE status='PENDING') catches 
+  CONCURRENT duplicates — two workers racing for the same job.
+- ZREM return-value check catches the same race at the Redis layer.
+- Neither catches SEQUENTIAL duplicates — the same job legitimately 
+  running twice, at different times, because the first run was never 
+  recorded as complete.
+
+**Key insight:** the claim protects a database row. It cannot un-send 
+an email.
+
+**Why it wasn't built:**
+1. process_job() is a stub (print + sleep). No real side effects exist, 
+   so there is nothing to protect and no way to test the protection.
+2. The correct implementation is per-handler, not generic. send_email 
+   needs a dedup key; charge_payment needs the provider's own 
+   idempotency key (so THEIR system rejects the duplicate); 
+   generate_pdf and recalculate_stats are naturally idempotent and 
+   need nothing.
+3. Wrong layer. Idempotency is application logic, not queue 
+   infrastructure. Celery and BullMQ make the same split — they 
+   guarantee at-least-once delivery and explicitly document that the 
+   task author is responsible for idempotent handlers.
+4. Time budget — invisible in a demo, untestable against stubs, 
+   competing with retry/DLQ/dashboard/Docker work.
+
+**How it would be implemented:** a dedup key checked before the side 
+effect and written after it, e.g.
+    key = f"email_sent:{job.id}"
+    if redis.get(key): return          # already done, skip
+    send_email(...)
+    redis.set(key, "1", ex=86400)
+For external APIs, pass the key to the provider (Stripe-style) so the 
+duplicate is rejected server-side rather than client-side.
+
+**Underlying principle:** exactly-once delivery is not achievable 
+across a queue and a database. The achievable target is at-least-once 
+delivery plus idempotent handlers.

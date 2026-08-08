@@ -2,7 +2,7 @@ import os
 import time
 from uuid import UUID
 from datetime import datetime, timezone
-from app.config import REDIS_QUEUE_KEY
+from app.config import REDIS_QUEUE_KEY, PRIORITY_SCORES
 
 import redis
 from dotenv import load_dotenv
@@ -14,6 +14,28 @@ load_dotenv()
 
 # QUEUE_NAMES = ["redis_queue:HIGH", "redis_queue:MEDIUM", "redis_queue:LOW"]
 
+WEIGHT_CYCLE = (
+    ["HIGH"] * 6 +
+    ["MEDIUM"] * 3 +
+    ["LOW"] * 1
+)
+
+
+def pick_job_from_tier(worker_redis, tier):
+    """Try to pop one job whose score matches this tier."""
+    score = PRIORITY_SCORES[tier]
+
+    candidates = worker_redis.zrangebyscore(
+        REDIS_QUEUE_KEY, score, score, start=0, num=1
+    )
+    if not candidates:
+        return None
+
+    job_id = candidates[0]
+    removed = worker_redis.zrem(REDIS_QUEUE_KEY, job_id)
+
+    return job_id if removed == 1 else None
+
 def process_job(job, pid):
     """Simulate doing actual work. Real handlers come later."""
     if job.type == "fail_test":
@@ -22,12 +44,6 @@ def process_job(job, pid):
     print(f"[worker {pid}] : type={job.type},  priority={job.priority.value}, payload={job.payload}")
     time.sleep(2)
 
-
-# def process_job(job):
-#     """Simulate doing actual work. Real handlers come later."""
-#     print(f"    type={job.type}  priority={job.priority.value}")
-#     print(f"    payload={job.payload}")
-#     time.sleep(2)
 
 
 def claim_job(db, job_id):
@@ -68,6 +84,7 @@ def mark_failed(db, job, error):
 
 def run_worker():
     pid = os.getpid()
+    cycle_index = 0
 
     worker_redis = redis.Redis(
         host=os.getenv("REDIS_HOST"),
@@ -77,17 +94,23 @@ def run_worker():
         socket_connect_timeout=5,
     )
 
-    print(f"[worker {pid}] started, watching queue {REDIS_QUEUE_KEY}")
+    print(f"[worker {pid}] started, watching queue: {REDIS_QUEUE_KEY}")
 
     while True:
-        result = worker_redis.bzpopmin(REDIS_QUEUE_KEY, timeout=5)
+        tier = WEIGHT_CYCLE[cycle_index % len(WEIGHT_CYCLE)]
+        cycle_index += 1
 
-        if result is None:
-            continue
+        job_id = pick_job_from_tier(worker_redis, tier)
 
-        queue_name, job_id, score = result
-        print(f"[worker {pid}] picked {job_id} (score={score}) from {queue_name}")
-
+        if job_id is None:
+            result = worker_redis.bzpopmin(REDIS_QUEUE_KEY, timeout=5)
+            if result is None:
+                continue
+            _, job_id, score = result
+            print(f"[worker {pid}] picked {job_id} (scheduled tier={tier}, but empty — fell back to global lowest score={score})")
+        else:
+            print(f"[worker {pid}] picked {job_id} (scheduled tier={tier}, direct hit)")
+            
         db = SessionLocal()
         try:
             job = claim_job(db, UUID(job_id))
