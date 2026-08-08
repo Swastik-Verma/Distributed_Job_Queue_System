@@ -4,7 +4,7 @@ A background job processing system built from scratch in Python — the
 kind of infrastructure that sits behind "your order is confirmed, email
 on its way." Similar in spirit to Celery or BullMQ.
 
-**Status:** In development (Day 25 of 60)
+**Status:** In development (Day 27 of 60 - Week 4 complete)
 
 ## The problem
 
@@ -56,6 +56,8 @@ pop an ID from Redis, then load the full job from PostgreSQL.
       (verified under load — see below)
 - [x] Priority weights configurable in one place (`app/config.py`)
 - [x] `GET /jobs/stats/queue` — live queue depth by priority tier
+- [x] Handler registry — job types dispatch to registered functions
+      (`worker/handlers.py`), with per-handler payload validation
 
 ## Roadmap
 
@@ -100,6 +102,12 @@ would mean two copies that can drift apart. Redis is a pointer;
 PostgreSQL is the truth.
 
 See [NOTES.md](./NOTES.md) for known trade-offs and failure modes.
+
+**Why a handler registry?** The worker knows how to claim jobs, handle
+failures, and record outcomes. It knows nothing about what a job does.
+Job types map to handler functions in a registry, so adding a new job
+type never touches worker loop logic — the same separation Celery and
+BullMQ use.
 
 ## Running locally
 

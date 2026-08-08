@@ -307,3 +307,42 @@ Added GET /jobs/stats/queue reporting total queue depth and per-tier depth via Z
 Note that Redis queue depth and PostgreSQL PENDING count are two independent views that SHOULD agree. Divergence indicates the dual-write failure (committed to PostgreSQL, never reached Redis). Once the Week 5 sweeper exists, comparing these two numbers becomes a system health check.
 
 **FastAPI routing note:** the endpoint is /jobs/stats/queue rather than /jobs/stats because a single-segment route would be matched by the existing /jobs/{job_id} path-param route and fail UUID validation with a 422.
+
+## Handler Registry (Dispatch Pattern)
+
+process_job() no longer contains job logic. It looks up job.type in a
+HANDLERS dict and calls the registered function. Adding a job type means
+writing a function and registering it — the worker loop never changes.
+
+Same pattern Celery uses (task registry) and BullMQ (named processors).
+Keeps the queue infrastructure generic: the worker knows how to claim,
+retry, and record outcomes; it knows nothing about what any specific job
+actually does.
+
+Handlers validate their own payload, since `payload` is schemaless JSON
+and nothing at the API layer enforces per-type shape.
+
+## Transient vs Permanent Failures
+
+Surfaced by the handler registry. Three distinct failure kinds now exist:
+  - unknown job type      → permanent
+  - missing payload field → permanent
+  - flaky_test            → transient
+
+Current retry design treats all failures identically: back off and retry
+up to max_retries, then DEAD. For a permanent failure this wastes ~6
+minutes of worker capacity across 4 attempts on something guaranteed to
+fail identically every time — the handler will not exist on attempt 4
+either.
+
+**Correct design:** permanent failures should skip retry and go straight
+to DEAD. Transient failures get the full exponential backoff.
+
+**Planned implementation (Week 5):** a PermanentFailure exception class.
+The worker catches it separately and routes directly to DEAD; any other
+exception follows the normal retry path. The handler decides which kind
+its failure is — the worker just honours the distinction.
+
+**Interview framing:** retry policy is not one-size-fits-all. Retrying a
+deterministic failure is not fault tolerance, it is wasted capacity plus
+delayed failure reporting.

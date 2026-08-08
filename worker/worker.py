@@ -3,6 +3,7 @@ import time
 from uuid import UUID
 from datetime import datetime, timezone
 from app.config import REDIS_QUEUE_KEY, PRIORITY_SCORES, WEIGHT_CYCLE
+from worker.handlers import HANDLERS
 
 import redis
 from dotenv import load_dotenv
@@ -37,13 +38,22 @@ def pick_job_from_tier(worker_redis, tier):
 
     return job_id if removed == 1 else None
 
-def process_job(job, pid):
-    """Simulate doing actual work. Real handlers come later."""
-    if job.type == "fail_test":
-        raise Exception("Simulated failure: email server unreachable")
+# def process_job(job, pid):
+#     """Simulate doing actual work. Real handlers come later."""
+#     if job.type == "fail_test":
+#         raise Exception("Simulated failure: email server unreachable")
 
-    print(f"[worker {pid}] : type={job.type},  priority={job.priority.value}, payload={job.payload}")
-    time.sleep(2)
+#     print(f"[worker {pid}] : type={job.type},  priority={job.priority.value}, payload={job.payload}")
+#     time.sleep(2)
+def process_job(job, pid):
+    """Dispatch the job to its registered handler."""
+    handler = HANDLERS.get(job.type)
+
+    if handler is None:
+        raise ValueError(f"No handler registered for job type: '{job.type}'")
+
+    print(f"[worker {pid}] : type={job.type}, priority={job.priority.value}, payload={job.payload}")
+    return handler(job.payload)
 
 
 
