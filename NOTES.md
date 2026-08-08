@@ -240,3 +240,42 @@ duplicate is rejected server-side rather than client-side.
 **Underlying principle:** exactly-once delivery is not achievable 
 across a queue and a database. The achievable target is at-least-once 
 delivery plus idempotent handlers.
+
+
+
+## Starvation Prevention: Measured Results
+
+**Test setup:** 3 LOW jobs submitted first, then 40 HIGH jobs — all 
+pre-loaded into Redis before workers started, creating a 43-job backlog 
+with a 40:3 HIGH-to-LOW imbalance.
+
+**Without weighted selection (plain BZPOPMIN):** all LOW jobs would wait 
+until every HIGH job finishes (~37+ seconds). Starvation guaranteed 
+under sustained HIGH load.
+
+**With weighted selection (6:3:1 cycle):** 2 out of 3 LOW jobs completed 
+at ~29 seconds while HIGH jobs were still being processed (last HIGH 
+finished at ~37s). The third LOW job was picked up last via fallback 
+after HIGH was drained.
+
+**Measured wait times:**
+- HIGH jobs: 11s (fastest) to 37s (slowest)
+- LOW jobs: 29s (rescued by weighted selection) to 39s (last job, fallback)
+- LOW was slower than HIGH — by design — but not starved.
+
+**Important nuance:** the 6:3:1 ratio describes the worker's INTENTION 
+(which tier to target each turn), not the OUTCOME. Outcomes depend on 
+what's actually available. MEDIUM turns always fell back (zero MEDIUM 
+jobs submitted). Some LOW turns lost ZREM races to other workers and 
+fell back. The ratio is followed in intent; demand determines results.
+
+**Direct hits vs fallbacks (from grep):**
+- 21 direct hits on HIGH, 2 on LOW, 0 on MEDIUM
+- 22 total direct hits, 20 fallbacks
+- Fallbacks are expected and correct — they keep workers productive 
+  when their scheduled tier is empty.
+
+**Why the load must exceed worker capacity:** if workers drain the queue 
+as fast as it fills, no backlog forms, and weighted vs unweighted 
+strategies produce identical results. Starvation only becomes observable 
+under sustained backlog pressure.

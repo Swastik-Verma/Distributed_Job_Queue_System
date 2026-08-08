@@ -4,7 +4,7 @@ A background job processing system built from scratch in Python — the
 kind of infrastructure that sits behind "your order is confirmed, email
 on its way." Similar in spirit to Celery or BullMQ.
 
-**Status:** In development (Day 11 of 60)
+**Status:** In development (Day 25 of 60)
 
 ## The problem
 
@@ -45,15 +45,15 @@ pop an ID from Redis, then load the full job from PostgreSQL.
 - [x] Redis connection
 - [x] `jobs` table schema with status/priority enums, retry tracking
 - [x] `POST /jobs` — submit a job (201), persisted as `PENDING`
-- [x] Job ID pushed to the matching Redis priority queue
 - [x] `GET /jobs/{id}` — fetch job status (200/404)
 - [x] Pydantic request/response schemas with case-insensitive priority
 - [x] Project restructured: `app/` package with `routers/` for endpoints
-- [x] Worker processes pick up jobs from Redis via BRPOP
+- [x] 3 worker processes running in parallel via multiprocessing launcher
 - [x] Conditional claim prevents duplicate processing
-- [x] Jobs marked SUCCESS or FAILED after processing
-- [x] Error messages captured on failure
-- [x] 3 workers running in parallel via multiprocessing launcher
+- [x] Jobs marked SUCCESS or FAILED after processing, errors captured
+- [x] Priority queues migrated from 3 Redis Lists to 1 Sorted Set
+- [x] Weighted round-robin selection prevents priority starvation
+      (verified under load — see below)
 
 ## Roadmap
 
@@ -61,8 +61,10 @@ pop an ID from Redis, then load the full job from PostgreSQL.
 - [ ] Worker processes via Python multiprocessing
 - [ ] Priority queues using Redis Sorted Sets
 - [ ] Retry with exponential backoff + Dead Letter Queue
+- [ ] Orphan/reconciliation sweeper
 - [ ] Live dashboard over WebSockets
 - [ ] Docker Compose for the full stack
+- [ ] Deployment
 
 ## Data model
 
@@ -113,3 +115,9 @@ uvicorn app.main:app --reload
 
 Interactive API docs: http://localhost:8000/docs
  
+## Priority Queues with Starvation Prevention
+
+Jobs are queued in a single Redis Sorted Set where the score encodes priority (HIGH=1, MEDIUM=5, LOW=10). Workers don't simply take the lowest score — that would starve LOW-priority jobs under sustained HIGH load. Instead, each worker walks a weighted round-robin cycle (6 HIGH : 3 MEDIUM : 1 LOW), targeting a specific tier on each pick 
+via ZRANGEBYSCORE + ZREM. If the scheduled tier is empty, the worker falls back to a global BZPOPMIN rather than idling.
+
+Verified under load: with 40 HIGH jobs and 3 LOW jobs pre-loaded, 2 out of 3 LOW jobs completed while HIGH jobs were still being processed. LOW jobs waited ~29s vs HIGH's ~11-37s range — slower by design, but not starved.
