@@ -26,3 +26,11 @@ WEIGHT_CYCLE = [
     for tier, weight in PRIORITY_WEIGHTS.items()
     for _ in range(weight)
 ]
+
+# ---- Retry backoff ----
+# delay = BASE_DELAY * (MULTIPLIER ** retry_count), jittered, then capped.
+RETRY_BASE_DELAY = 5      # seconds — delay before the first retry
+RETRY_MULTIPLIER = 2      # each attempt waits double the previous
+RETRY_MAX_DELAY = 300     # hard ceiling (5 min) — applied AFTER jitter
+RETRY_JITTER_MIN = 0.5    # delay can shrink to 50%
+RETRY_JITTER_MAX = 1.5    # delay can grow to 150%

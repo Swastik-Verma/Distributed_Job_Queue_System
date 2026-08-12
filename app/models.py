@@ -9,7 +9,7 @@
 
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, Integer, DateTime, Enum, JSON, Text
 from sqlalchemy.dialects.postgresql import UUID
 import enum
@@ -41,7 +41,7 @@ class Job(Base):
     priority = Column(Enum(JobPriority), default=JobPriority.MEDIUM, nullable=False)
     retry_count = Column(Integer, default=0)
     max_retries = Column(Integer, default=3)
-    next_retry_at = Column(DateTime, nullable=True)
     error_message = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    next_retry_at = Column(DateTime(timezone=True), nullable=True)

@@ -465,3 +465,55 @@ for.
 goal is a recovery window long enough, and alerting loud enough, that a human
 catches what matters before it is too late. Even SQS eventually deletes
 messages after DLQ retention expires.
+
+## Backoff Implementation Detail: The Silent Off-By-One
+
+next_retry_at must be computed BEFORE retry_count is incremented.
+
+  retry_count = 0 (no retries yet) → delay = 5 × 2^0 = 5s   correct
+  computed after increment (=1)    → delay = 5 × 2^1 = 10s  wrong
+
+Computing after the increment shifts the entire schedule one step up
+(10s → 20s → 40s instead of 5s → 10s → 20s). Nothing crashes and the
+delays still grow exponentially, so the bug is invisible in behaviour —
+the documented schedule just silently stops matching reality. Off-by-one
+errors in backoff logic don't throw; they produce a plausible-but-wrong
+schedule. Only measuring actual delays catches them.
+
+Verified empirically: five fail_test jobs failing within the same second
+received five DIFFERENT next_retry_at values rather than an identical
+5.00s. That spread IS the thundering-herd fix, visible directly in data.
+
+## Jitter vs Cap Conflict at High Attempt Counts
+
+Applying the delay cap AFTER jitter flattens all values to MAX_DELAY at
+high attempts — defeating jitter entirely. Three jobs at attempt 7 all
+get exactly 300s, creating the same synchronised wall jitter exists to
+prevent.
+
+Fix: cap BEFORE jitter, then jitter the capped value. This means some
+delays can slightly exceed MAX_DELAY (up to 1.5×), but full jitter
+spread is preserved at every attempt. Trade-off accepted: the
+difference between a 300s and 450s retry at attempt 7 is insignificant,
+but the difference between 10 synchronised retries and 10 scattered
+retries is the thundering herd.
+
+## Naive vs Aware Timestamps (Fixed)
+
+Columns were TIMESTAMP WITHOUT TIME ZONE while the code wrote
+datetime.now(timezone.utc). PostgreSQL silently stripped the offset.
+
+Harmless while timestamps were only displayed. Would have become a real
+bug when the sweeper compares next_retry_at <= NOW(): SQL's NOW()
+returns server-local time (IST, UTC+5:30) against a UTC-stored value —
+a 5.5-hour skew that would make every retry appear overdue and fire
+immediately, silently disabling the entire backoff schedule.
+
+Fixed by migrating columns to TIMESTAMPTZ and switching defaults from
+the deprecated datetime.utcnow (naive) to datetime.now(timezone.utc)
+(aware). PostgreSQL now stores and compares in a consistent timezone.
+
+Interview framing: timezone bugs in retry/scheduling logic are silent —
+no error, no crash, just every delay collapsing to zero. The only
+defence is knowing the difference between naive and aware datetimes and
+checking what your database column type actually stores.

@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 
 from app.database import SessionLocal
 from app.models import Job, JobStatus
+from worker.retry import get_next_retry_at
+
 
 
 load_dotenv()
@@ -38,13 +40,7 @@ def pick_job_from_tier(worker_redis, tier):
 
     return job_id if removed == 1 else None
 
-# def process_job(job, pid):
-#     """Simulate doing actual work. Real handlers come later."""
-#     if job.type == "fail_test":
-#         raise Exception("Simulated failure: email server unreachable")
 
-#     print(f"[worker {pid}] : type={job.type},  priority={job.priority.value}, payload={job.payload}")
-#     time.sleep(2)
 def process_job(job, pid):
     """Dispatch the job to its registered handler."""
     handler = HANDLERS.get(job.type)
@@ -85,7 +81,10 @@ def mark_success(db, job):
 
 
 def mark_failed(db, job, error):
-    """Mark job as failed and save the error message."""
+    """Mark job FAILED, record the error, and schedule the next attempt."""
+    # Delay is based on attempts made SO FAR — before this increment.
+    job.next_retry_at = get_next_retry_at(job.retry_count)
+
     job.status = JobStatus.FAILED
     job.error_message = str(error)
     job.retry_count += 1
