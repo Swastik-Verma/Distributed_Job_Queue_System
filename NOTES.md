@@ -346,3 +346,122 @@ its failure is — the worker just honours the distinction.
 **Interview framing:** retry policy is not one-size-fits-all. Retrying a
 deterministic failure is not fault tolerance, it is wasted capacity plus
 delayed failure reporting.
+
+
+## Exponential Backoff
+
+**Why not retry immediately:** three separate problems. Worker capacity is
+burned spinning on a job that cannot yet succeed. The failing dependency
+receives MORE load precisely when it is already overloaded (retry storm),
+preventing recovery. And most transient failures need elapsed time to clear
+— a restart, a healing route, a rate-limit window — so an instant retry asks
+the same question before anything could have changed.
+
+**The mechanism:** delay = base × (multiplier ^ retry_count), capped at a
+maximum. Each failure is evidence the problem is more serious, so check less
+often. Over the first 80s: fixed-5s retry makes 16 attempts, exponential
+makes 4 — same coverage of the recovery window, a quarter of the load.
+
+**Why exponential rather than linear:** over a 10-minute outage, linear
+(5s, 10s, 15s, 20s...) makes ~15 attempts; exponential makes ~7. More
+importantly, exponential adapts to UNKNOWN outage duration — it scales its
+patience to the severity of the problem without being told how long the
+outage will last. Linear treats a 5-second blip and a 5-hour outage with the
+same escalation rate, which is right for neither.
+
+**Why the cap:** uncapped, attempt 10 waits 5 × 2^9 ≈ 43 minutes.
+
+**Chosen implementation:** computed exponential (not a lookup table), so it
+scales to any max_retries value without editing a list. BASE_DELAY=5,
+MULTIPLIER=2, MAX_DELAY=300. Cap applied AFTER jitter — a hard ceiling, so
+no retry ever waits more than 5 minutes.
+
+## Jitter and the Thundering Herd
+
+**What backoff alone does NOT solve:** if a dependency goes down and 200 jobs
+fail within the same window, every one computes an IDENTICAL delay (same
+formula, same retry_count) and retries at the same instant. The recovering
+service is hit by 200 simultaneous requests and falls over again — then the
+whole synchronised wave repeats at the next delay.
+
+Backoff spreads retries across TIME (successive attempts for the same job get
+further apart). It does not spread them across JOBS, because every job
+follows an identical schedule. Each wave is still a synchronised wall; the
+walls just get further apart.
+
+**Jitter** = deliberately adding randomness to a computed delay so jobs with
+identical retry_count get different retry times. It breaks the
+synchronisation that creates the herd.
+
+**Strategies compared:**
+  - Full jitter — random(0, delay). Maximum spread, but a 10s delay can
+    collapse to 0.3s, defeating the point of waiting.
+  - Equal jitter — delay/2 + random(0, delay/2). Guarantees a minimum wait.
+  - Decorrelated — random(base, previous_delay × 3). Randomness compounds
+    across attempts, so jobs diverge further each round. AWS's
+    recommendation; used by gRPC. Best at massive scale where thousands of
+    clients retry together and a fixed-width window is still too narrow.
+  - CHOSEN: delay × random(0.5, 1.5). Equal-jitter spirit, one line, safe
+    floor (never less than half the intended delay). Decorrelated is overkill
+    at 3 workers and harder to explain.
+
+**Backoff and jitter are two halves of one solution.** Jitter alone scatters
+retries but clusters them at a short delay — no recovery time. Backoff alone
+spaces the waves but each wave is a wall. Together: waves further apart AND
+smeared out.
+
+## Where the Delay Lives (Design Decision)
+
+The worker must NOT sleep for the backoff duration. A 5-minute delay would
+take that worker offline entirely; at 3 workers that is a third of capacity
+idle for one failing job.
+
+Instead: on failure, compute next_retry_at = now + delay, store it in
+PostgreSQL, and move on immediately. A separate sweeper scans for FAILED jobs
+whose next_retry_at has passed and re-queues them.
+
+This is why next_retry_at existed in the schema from Day 8, and why the
+sweeper is a Week 5 requirement rather than an extra — the backoff
+calculation is only half the mechanism. Without the sweeper, no retry ever
+actually fires.
+
+## Retry Budget: What Happens When the Outage Outlasts It
+
+max_retries creates a FINITE retry window. With 3 retries and exponential
+backoff the total window is ~35 seconds. A 10-hour outage exhausts it in
+under a minute and the job is marked DEAD — even though it was valid and the
+service later recovered.
+
+**Strategies for extending or compensating:**
+
+1. Generous max_retries + delay cap. Once delay hits the 300s cap, every
+   further retry costs one DB write per 5 minutes. 10 retries ≈ 25-minute
+   window; 20 retries ≈ over an hour. Cheap — at ~72 retries over 6 hours
+   against ~16,000 other jobs processed, it is well under 1% of capacity.
+2. Per-job max_retries (already in the schema). A failed email might get 3
+   attempts; a failed payment gets 20. Retry budget scales with the cost of
+   giving up.
+3. Manual retry endpoint (Day 34). Automated retries handle short
+   self-healing outages; long outages needed human intervention anyway, so
+   by the time the service is fixed a human already knows and can re-process
+   the DEAD jobs. The trigger is "I just fixed the root cause" — NOT a timer.
+4. Time-based retry budget instead of count-based. Keep retrying until N
+   hours have elapsed, regardless of attempt count. AWS SQS does this
+   (4-day default retention). Right at AWS scale where human intervention
+   per incident is impossible; count-based is simpler and caps resource use
+   predictably at this scale.
+
+**The gap none of these fully close:** a short outage that self-heals AFTER
+the retry budget is exhausted but BEFORE anyone notices. No human is
+triggered, so manual retry never happens, and the jobs sit DEAD silently.
+Mitigations: a generous enough budget to outlast typical blips; alerting on
+DEAD-job volume; or an automatic resurrector — a periodic scan that re-queues
+recently-DEAD jobs from scratch. A resurrector MUST exclude permanent
+failures or it will cycle a never-succeeding job between DEAD and FAILED
+forever — which is exactly what the PermanentFailure distinction (Day 27) is
+for.
+
+**Underlying acceptance:** no retry strategy guarantees 100% completion. The
+goal is a recovery window long enough, and alerting loud enough, that a human
+catches what matters before it is too late. Even SQS eventually deletes
+messages after DLQ retention expires.
