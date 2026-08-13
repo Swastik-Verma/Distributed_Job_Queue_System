@@ -6,13 +6,14 @@ function that processes it. Adding a new job type means writing a
 function and registering it here — no changes to worker loop logic.
 """
 import time
+from worker.exceptions import PermanentFailure
 
 
 def handle_send_email(payload):
     """Simulated email send."""
     to = payload.get("to")
     if not to:
-        raise ValueError("send_email requires a 'to' field in payload")
+        raise PermanentFailure("send_email requires a 'to' field in payload")
     print(f"    → sending email to {to}")
     time.sleep(2)
     return {"sent_to": to}
@@ -22,7 +23,7 @@ def handle_generate_pdf(payload):
     """Simulated PDF generation."""
     filename = payload.get("file")
     if not filename:
-        raise ValueError("generate_pdf requires a 'file' field in payload")
+        raise PermanentFailure("generate_pdf requires a 'file' field in payload")
     print(f"    → generating PDF: {filename}")
     time.sleep(3)
     return {"generated": filename}
@@ -32,7 +33,7 @@ def handle_fraud_check(payload):
     """Simulated fraud check."""
     txn = payload.get("txn") or payload.get("transaction_id")
     if not txn:
-        raise ValueError("fraud_check requires a 'txn' field in payload")
+        raise PermanentFailure("fraud_check requires a 'txn' field in payload")
     print(f"    → running fraud check on {txn}")
     time.sleep(1)
     return {"checked": txn, "verdict": "clean"}
@@ -72,3 +73,5 @@ HANDLERS = {
     "fail_test": handle_fail_test,
     "flaky_test": handle_flaky_test,
 }
+
+

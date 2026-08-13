@@ -20,6 +20,7 @@ def create_job(job_data: JobCreate, db: Session = Depends(get_db)):
         priority=job_data.priority,
         payload=job_data.payload,
         status=JobStatus.PENDING,
+        max_retries=job_data.max_retries
     )
     db.add(new_job)
     db.commit()

@@ -9,6 +9,7 @@ class JobCreate(BaseModel):
     type: str
     priority: Optional[JobPriority] = JobPriority.MEDIUM
     payload: Dict[str, Any]
+    max_retries: int = 3
 
     @field_validator("priority", mode="before")
     @classmethod

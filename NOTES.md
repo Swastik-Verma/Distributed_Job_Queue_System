@@ -517,3 +517,49 @@ Interview framing: timezone bugs in retry/scheduling logic are silent —
 no error, no crash, just every delay collapsing to zero. The only
 defence is knowing the difference between naive and aware datetimes and
 checking what your database column type actually stores.
+
+## Transient vs Permanent Failure Routing
+
+mark_failed() now routes three ways instead of one:
+  PermanentFailure           → DEAD immediately (retry cannot help)
+  retry_count > max_retries  → DEAD (gave up)
+  otherwise                  → FAILED + next_retry_at
+
+**Why permanence overrides the retry budget:** an unknown job type or a
+missing payload field produces an identical result on every attempt. With
+max_retries=3 and exponential backoff, retrying it burns ~35s of worker
+capacity and delays the failure report, for a guaranteed-identical
+outcome. Retrying a deterministic failure is not fault tolerance; it is
+wasted capacity plus delayed reporting.
+
+**Classification rule:** if the identical input could plausibly succeed
+later, it is transient. If the answer is guaranteed identical, it is
+permanent. Ambiguous cases (401 invalid credentials — a human might
+rotate the key) default to TRANSIENT: over-classifying as permanent
+throws away work that would have succeeded, which is the costlier error.
+
+**max_retries semantics:** retry_count > max_retries means max_retries=3
+allows 3 retries after the original attempt — 4 attempts total. Chosen
+deliberately; >= would make it 3 attempts total.
+
+**next_retry_at is nulled on DEAD** so the data never claims a retry is
+pending for a terminal job, and so the sweeper cannot pick up a DEAD job
+even if its status filter were wrong.
+
+## Dead Letter Queue: Status Column, Not a Redis List
+
+The original plan called for moving dead jobs to a separate Redis list
+alongside status=DEAD. Rejected — same reasoning that rejected LMOVE to a
+Redis "processing" list in Week 3.
+
+A second Redis structure records a fact PostgreSQL already records, and
+is strictly worse for the DLQ's actual purpose (inspection): a Redis list
+holds bare UUIDs with no error messages, no grouping, no filtering, so
+every entry has to be looked up in PostgreSQL anyway. It also
+reintroduces the dual-write problem (this problem we had also solved by rejecting LMOVE to a Redis "processing" list in Week 3) — two systems, no shared transaction,
+guaranteed drift on partial failure.
+
+Third design decision resolved by the same principle: PostgreSQL is the
+source of truth; Redis is a disposable pointer queue. A DLQ is defined by
+isolation from normal processing plus preservation for inspection —
+neither of which requires a separate queue.

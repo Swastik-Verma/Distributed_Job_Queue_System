@@ -11,18 +11,11 @@ from dotenv import load_dotenv
 from app.database import SessionLocal
 from app.models import Job, JobStatus
 from worker.retry import get_next_retry_at
+from worker.exceptions import PermanentFailure
 
 
 
 load_dotenv()
-
-# QUEUE_NAMES = ["redis_queue:HIGH", "redis_queue:MEDIUM", "redis_queue:LOW"]
-
-# WEIGHT_CYCLE = (
-#     ["HIGH"] * 6 +
-#     ["MEDIUM"] * 3 +
-#     ["LOW"] * 1
-# )
 
 
 def pick_job_from_tier(worker_redis, tier):
@@ -46,7 +39,10 @@ def process_job(job, pid):
     handler = HANDLERS.get(job.type)
 
     if handler is None:
-        raise ValueError(f"No handler registered for job type: '{job.type}'")
+        valid = ", ".join(HANDLERS.keys())
+        raise PermanentFailure(
+            f"No handler registered for job type: '{job.type}'. Valid types: {valid}"
+        )
 
     print(f"[worker {pid}] : type={job.type}, priority={job.priority.value}, payload={job.payload}")
     return handler(job.payload)
@@ -81,15 +77,33 @@ def mark_success(db, job):
 
 
 def mark_failed(db, job, error):
-    """Mark job FAILED, record the error, and schedule the next attempt."""
-    # Delay is based on attempts made SO FAR — before this increment.
-    job.next_retry_at = get_next_retry_at(job.retry_count)
+    """Record the failure and route the job to FAILED or DEAD.
 
-    job.status = JobStatus.FAILED
+    DEAD when the failure is permanent (retrying cannot help) or when
+    max_retries is exhausted. Otherwise FAILED with a scheduled retry.
+    """
+    is_permanent = isinstance(error, PermanentFailure)
+
+    # Backoff is computed BEFORE the increment (Day 30 off-by-one rule)
+    scheduled_retry = get_next_retry_at(job.retry_count)
+
     job.error_message = str(error)
     job.retry_count += 1
     job.updated_at = datetime.now(timezone.utc)
+
+    retries_exhausted = job.retry_count > job.max_retries
+
+    if retries_exhausted or is_permanent :
+        job.status = JobStatus.DEAD
+        job.next_retry_at = None
+        reason = "permanent failure" if is_permanent else "retries exhausted"
+    else:
+        job.status = JobStatus.FAILED
+        job.next_retry_at = scheduled_retry
+        reason = f"retry {job.retry_count}/{job.max_retries} scheduled"
+
     db.commit()
+    return reason
 
 
 def run_worker():
@@ -135,8 +149,8 @@ def run_worker():
                 mark_success(db, job)
                 print(f"[worker {pid}] ✓ SUCCESS {job_id}\n")
             except Exception as e:
-                mark_failed(db, job, e)
-                print(f"[worker {pid}] ✗ FAILED {job_id} — {e}\n")
+                reason = mark_failed(db, job, e)
+                print(f"[worker {pid}] ✗ FAILED {job_id} — {e} [{reason}]\n")
 
         finally:
             db.close()
