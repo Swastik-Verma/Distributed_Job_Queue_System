@@ -34,3 +34,7 @@ RETRY_MULTIPLIER = 2      # each attempt waits double the previous
 RETRY_MAX_DELAY = 300     # hard ceiling (5 min) — applied AFTER jitter
 RETRY_JITTER_MIN = 0.5    # delay can shrink to 50%
 RETRY_JITTER_MAX = 1.5    # delay can grow to 150%
+
+# ---- Sweeper ----
+SWEEPER_INTERVAL = 5       # seconds between scans
+SWEEPER_BATCH_SIZE = 100   # max jobs repaired per scan

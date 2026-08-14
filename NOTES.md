@@ -563,3 +563,57 @@ Third design decision resolved by the same principle: PostgreSQL is the
 source of truth; Redis is a disposable pointer queue. A DLQ is defined by
 isolation from normal processing plus preservation for inspection —
 neither of which requires a separate queue.
+
+## The Reconciliation Sweeper
+
+Workers only see jobs whose IDs are in Redis. Once a worker pops an ID it is
+gone from Redis permanently, so a job that then FAILS is invisible to the
+entire pipeline — PostgreSQL knows it needs a retry, but nothing can find it.
+The sweeper scans the source of truth and repairs that divergence.
+
+**Status must reset to PENDING before the ZADD.** claim_job() requires
+status='PENDING'. Requeueing a job that is still FAILED produces a silent
+infinite loop: worker pops it, claim returns 0 rows, worker SKIPs, the ID is
+consumed from Redis, the sweeper sees it due again and re-pushes it. No error
+is ever raised and no work is ever done.
+
+**Ordering: PostgreSQL first, Redis second.** A crash between the two leaves
+the job PENDING but absent from Redis — which is exactly the stuck-PENDING
+case the sweeper itself repairs. The reverse ordering produces the infinite
+loop above instead. Same two writes; the ordering decides whether a crash is
+self-healing or self-perpetuating.
+
+**Batch limit exists to prevent a thundering herd of the sweeper's own
+making.** An unbounded scan over a large backlog would fire every due retry in
+one burst. Ordered oldest-first so a capped batch never permanently starves
+anything.
+
+**Scan interval sets the precision of the whole backoff schedule.** A job due
+at 5s will not fire until the next scan, so the interval is added latency on
+top of every computed delay.
+
+**Fourth use of conditional update as compare-and-swap:** claim_job
+(status='PENDING'), pick_job_from_tier (ZREM return value), mark_failed
+routing, and now the sweeper's requeue (status='FAILED'). General rule: when
+two actors might touch the same record, never check-then-act — make the write
+conditional and read the affected-row count.
+
+**Sweeper is a singleton; workers are a pool.** Multiple sweepers are correct
+(the conditional update prevents double-requeue) but wasteful — they scan
+identical rows. Matters at Docker time: scale worker replicas, never sweeper
+replicas.
+
+**Indexed (status, next_retry_at)** because the scan runs on a fixed interval
+forever; without it, every cycle is a full table scan.
+
+## Rejected: Redis Delayed Queue
+
+A common alternative is a second sorted set scored by retry timestamp —
+ZADD delayed_queue <unix_ts> <job_id>, then ZRANGEBYSCORE 0 <now>. Elegant,
+and widely used in practice.
+
+Rejected for the same reason as the Redis DLQ and the LMOVE processing list:
+PostgreSQL already stores next_retry_at, so this is a second copy of existing
+information written without a shared transaction — dual-write again. Fourth
+design question settled by the same principle: PostgreSQL is the source of
+truth, Redis is a disposable pointer queue.
