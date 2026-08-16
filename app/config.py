@@ -38,3 +38,12 @@ RETRY_JITTER_MAX = 1.5    # delay can grow to 150%
 # ---- Sweeper ----
 SWEEPER_INTERVAL = 5       # seconds between scans
 SWEEPER_BATCH_SIZE = 100   # max jobs repaired per scan
+
+
+# How long a job may sit PENDING before we assume its Redis push was lost.
+PENDING_STUCK_SECONDS = 60
+
+# How long a job may stay RUNNING before we assume the worker died.
+# MUST exceed the longest realistic job duration — there are no heartbeats,
+# so a slow-but-alive job looks identical to a dead one.
+RUNNING_LEASE_SECONDS = 60

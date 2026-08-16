@@ -141,3 +141,27 @@ Balanced load test (60 HIGH / 30 MEDIUM / 30 LOW):
 | LOW      | 30   | 115s     | 130s     | 10 (14%)    |
 
 Target ratio 60/30/10 — measured 57/29/14. All tiers completed.
+
+
+## Fault Tolerance and Recovery
+
+Failed jobs retry with exponential backoff and jitter (5s → 10s → 20s,
+±50% randomised, capped near 5 minutes). Delays are never slept by the
+worker — the failure records a `next_retry_at` timestamp and the worker
+moves on immediately.
+
+A reconciliation sweeper runs every 5 seconds and repairs three
+divergences between PostgreSQL (source of truth) and Redis (pointer queue):
+
+| Case | Cause | Repair |
+|---|---|---|
+| FAILED, retry due | Normal backoff cycle | Reset to PENDING, re-queue |
+| PENDING, stuck >60s | Dual-write: DB commit succeeded, Redis push lost | Re-queue |
+| RUNNING, stale >60s | Worker died mid-job | Reset to PENDING, re-queue |
+
+Failures are classified as transient or permanent. Permanent failures
+(unknown job type, malformed payload) skip retry entirely and go straight
+to DEAD, rather than burning the retry budget on a guaranteed-identical
+outcome. Transient failures get the full backoff cycle, and jobs exceeding
+`max_retries` are marked DEAD — preserved with their error message for
+inspection and manual retry.

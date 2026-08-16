@@ -598,10 +598,38 @@ routing, and now the sweeper's requeue (status='FAILED'). General rule: when
 two actors might touch the same record, never check-then-act — make the write
 conditional and read the affected-row count.
 
-**Sweeper is a singleton; workers are a pool.** Multiple sweepers are correct
-(the conditional update prevents double-requeue) but wasteful — they scan
-identical rows. Matters at Docker time: scale worker replicas, never sweeper
-replicas.
+## Why Workers Scale But Sweepers Don't
+
+**Workers are slow per job.** Each worker picks a job and spends 2+ seconds
+processing it (sending an email, generating a PDF, calling an API). While
+one worker is busy, other jobs wait. Adding workers means multiple jobs
+process simultaneously — real parallelism, real throughput gain.
+
+**Sweepers are fast per job.** The sweeper finds a due FAILED job, runs one
+UPDATE (microseconds), one ZADD (microseconds), and moves to the next. A
+single sweeper requeues 100 jobs in under a second — faster than the scan
+interval. There is nothing to parallelise because the work finishes before
+the next cycle begins.
+
+**Can workers collide?** Yes — through weighted selection (ZRANGEBYSCORE +
+ZREM), two workers can target the same job. But the system redirects the
+loser cheaply: ZREM returns 0, the worker falls back to BZPOPMIN, and gets
+a different job in microseconds. Collisions are rare and the redirect is
+nearly free, so adding workers still increases throughput.
+
+**Can sweepers collide?** Yes — but there is no redirect that helps. Multiple
+sweepers run the same SELECT query and find the same rows. One requeues
+everything in milliseconds. The others run conditional UPDATEs, get rows=0
+on every single job, and accomplish nothing. The problem is not the race
+itself — it is that the first sweeper already finished ALL the work before
+the others even start their UPDATEs. There is nothing left to redirect to.
+
+**The bottleneck determines whether scaling helps:**
+  Workers:  bottleneck is processing time (seconds per job)  → scale helps
+  Sweepers: bottleneck is scan interval (5s between cycles)  → scale is waste
+
+**Docker implication (Week 7):** scale worker replicas freely, keep the
+sweeper at replicas=1.
 
 **Indexed (status, next_retry_at)** because the scan runs on a fixed interval
 forever; without it, every cycle is a full table scan.
@@ -617,3 +645,77 @@ PostgreSQL already stores next_retry_at, so this is a second copy of existing
 information written without a shared transaction — dual-write again. Fourth
 design question settled by the same principle: PostgreSQL is the source of
 truth, Redis is a disposable pointer queue.
+
+
+
+## Sweeper Case 1: Stuck PENDING (Dual-Write Recovery)
+
+POST /jobs commits to PostgreSQL, then ZADDs to Redis, with no transaction
+spanning both. A lost second write leaves a job PENDING in the database with
+no pointer in Redis — invisible to every worker, while the client already
+received a 201. Identified in Week 2; this is the repair.
+
+Detection: status=PENDING and updated_at older than PENDING_STUCK_SECONDS.
+
+**The recovery is idempotent by construction.** The sweeper cannot cheaply
+distinguish "PENDING and lost" from "PENDING and legitimately waiting in a
+backlog" — and does not need to. Sorted sets enforce unique members, so ZADD
+on a member already present just updates its score. A false positive costs one
+wasted Redis write. (Same dedup property observed in the Day 22 experiments.)
+
+**Age is measured on updated_at, not created_at,** and updated_at is refreshed
+on requeue. With created_at, a job that legitimately waited in a backlog would
+be re-swept every cycle forever, since its creation time never changes.
+
+**Race with an in-flight claim:** a worker that has popped a job but not yet
+run claim_job leaves it PENDING and absent from Redis — briefly identical to
+the stuck case. If the sweeper requeues it, the worker claims it (→RUNNING)
+and whoever pops the duplicate pointer fails claim_job and skips. The Day 17
+conditional claim absorbs it. The 60s threshold makes this window practically
+unreachable anyway.
+
+## Sweeper Case 2: Orphaned RUNNING (Lease Recovery)
+
+A worker that dies mid-job leaves the row RUNNING forever: the PENDING sweep
+ignores it (wrong status) and its Redis pointer was already consumed.
+
+**RUNNING is a LEASE, not a state.** A live worker holds it; updated_at older
+than RUNNING_LEASE_SECONDS means the holder is presumed dead, so the job is
+reset to PENDING and re-queued. Equivalent to SQS visibility timeout and
+Celery's visibility_timeout.
+
+**The threshold must exceed the longest realistic job duration.** There are no
+heartbeats, so a slow-but-alive job is indistinguishable from a dead worker.
+60s against ~3s handlers gives 20× headroom. The proper fix is a heartbeat —
+the worker refreshes updated_at while working — which becomes necessary once
+job durations vary widely. Deliberately not built: uniform short jobs here.
+
+**Conditional update as the final safety net.** The whole premise is a guess.
+UPDATE ... WHERE status='RUNNING' means a worker that actually finished (and
+wrote SUCCESS) causes the reset to match zero rows, and the sweeper backs off.
+Fifth use of conditional-write-as-compare-and-swap.
+
+**retry_count IS incremented on orphan recovery — deliberate trade-off.**
+Not incrementing feels fairer (the job didn't fail; its worker died). But a
+POISON PILL — a job whose payload crashes whatever handler runs it — would
+then loop forever, killing a worker per cycle with nothing to stop it.
+Incrementing bounds the damage: after max_retries recoveries the job reaches
+DEAD and a human can inspect it. Cost: an occasional unfair strike when a
+worker dies for unrelated reasons (deploy, container restart). The cheaper
+mistake. SQS makes the same call — an expired visibility timeout counts as a
+receive and eventually routes the message to the DLQ.
+
+**Recovery necessarily re-runs completed work.** A worker that finished the
+side effect and died before writing SUCCESS has that side effect repeated.
+The queue cannot prevent this; only idempotent handlers can. At-least-once
+delivery is the achievable target, not exactly-once.
+
+## Sweep Ordering and Indexing
+
+Due retries are swept first — the common path, running constantly. The two
+recovery cases are exception handling for rare events; if a batch limit is
+ever reached, the normal path should not be crowded out by them.
+
+Added index on (status, updated_at) — both new sweeps filter on that pair
+every SWEEPER_INTERVAL seconds, alongside the existing
+(status, next_retry_at) index for due retries.

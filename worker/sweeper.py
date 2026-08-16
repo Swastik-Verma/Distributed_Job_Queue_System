@@ -4,12 +4,10 @@ Reconciliation sweeper.
 Workers only see jobs whose IDs are in Redis. Anything that falls out of
 Redis — or never made it there — is invisible to them forever. The sweeper
 scans PostgreSQL (the source of truth) and repairs that divergence.
-
-Today it handles ONE case: FAILED jobs whose next_retry_at has passed.
 """
 import os
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import redis
 from dotenv import load_dotenv
@@ -19,6 +17,8 @@ from app.config import (
     PRIORITY_SCORES,
     SWEEPER_INTERVAL,
     SWEEPER_BATCH_SIZE,
+    PENDING_STUCK_SECONDS,
+    RUNNING_LEASE_SECONDS,
 )
 from app.database import SessionLocal
 from app.models import Job, JobStatus
@@ -49,7 +49,6 @@ def requeue_due_retries(db, sweeper_redis):
 
     requeued = 0
     for job in due:
-        # Conditional claim — only transition if it is STILL FAILED.
         rows = (
             db.query(Job)
             .filter(Job.id == job.id, Job.status == JobStatus.FAILED)
@@ -62,7 +61,7 @@ def requeue_due_retries(db, sweeper_redis):
         db.commit()
 
         if rows == 0:
-            continue   # something else changed it first
+            continue
 
         score = PRIORITY_SCORES[job.priority.value]
         sweeper_redis.zadd(REDIS_QUEUE_KEY, {str(job.id): score})
@@ -72,6 +71,72 @@ def requeue_due_retries(db, sweeper_redis):
         log(f"requeued {job.id} (attempt {attempt}/{job.max_retries + 1}, {job.priority.value})")
 
     return requeued
+
+
+def requeue_stuck_pending(db, sweeper_redis):
+    """Re-queue PENDING jobs that appear to have lost their Redis pointer."""
+    cutoff = datetime.now(timezone.utc) - timedelta(seconds=PENDING_STUCK_SECONDS)
+
+    stuck = (
+        db.query(Job)
+        .filter(Job.status == JobStatus.PENDING, Job.updated_at < cutoff)
+        .order_by(Job.updated_at)
+        .limit(SWEEPER_BATCH_SIZE)
+        .all()
+    )
+
+    requeued = 0
+    for job in stuck:
+        score = PRIORITY_SCORES[job.priority.value]
+        sweeper_redis.zadd(REDIS_QUEUE_KEY, {str(job.id): score})
+
+        db.query(Job).filter(Job.id == job.id, Job.status == JobStatus.PENDING).update(
+            {Job.updated_at: datetime.now(timezone.utc)}
+        )
+        db.commit()
+
+        requeued += 1
+        log(f"recovered stuck PENDING {job.id} ({job.priority.value})")
+
+    return requeued
+
+
+def recover_orphaned_running(db, sweeper_redis):
+    """Reset jobs stuck in RUNNING past the lease window."""
+    cutoff = datetime.now(timezone.utc) - timedelta(seconds=RUNNING_LEASE_SECONDS)
+
+    orphaned = (
+        db.query(Job)
+        .filter(Job.status == JobStatus.RUNNING, Job.updated_at < cutoff)
+        .order_by(Job.updated_at)
+        .limit(SWEEPER_BATCH_SIZE)
+        .all()
+    )
+
+    recovered = 0
+    for job in orphaned:
+        rows = (
+            db.query(Job)
+            .filter(Job.id == job.id, Job.status == JobStatus.RUNNING)
+            .update({
+                Job.status: JobStatus.PENDING,
+                Job.retry_count: Job.retry_count + 1,
+                Job.error_message: "Worker died mid-job (lease expired)",
+                Job.updated_at: datetime.now(timezone.utc),
+            })
+        )
+        db.commit()
+
+        if rows == 0:
+            continue
+
+        score = PRIORITY_SCORES[job.priority.value]
+        sweeper_redis.zadd(REDIS_QUEUE_KEY, {str(job.id): score})
+
+        recovered += 1
+        log(f"recovered orphaned RUNNING {job.id} (attempt {job.retry_count + 2})")
+
+    return recovered
 
 
 def run_sweeper():
@@ -90,9 +155,13 @@ def run_sweeper():
     while True:
         db = SessionLocal()
         try:
-            requeue_due_retries(db, sweeper_redis)
+            retries = requeue_due_retries(db, sweeper_redis)
+            stuck = requeue_stuck_pending(db, sweeper_redis)
+            orphans = recover_orphaned_running(db, sweeper_redis)
+
+            if retries or stuck or orphans:
+                log(f"cycle complete — retries={retries} stuck={stuck} orphans={orphans}")
         except Exception as e:
-            # One bad cycle must never kill the sweeper.
             log(f"ERROR during scan: {e}")
         finally:
             db.close()
