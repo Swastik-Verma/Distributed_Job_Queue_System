@@ -1,0 +1,15 @@
+[launcher] starting 3 workers (parent PID 17490)
+[launcher] started worker-1 (PID 17492)
+[launcher] started worker-2 (PID 17493)
+[launcher] started worker-3 (PID 17494)
+[launcher] all 3 workers running
+
+[worker 17493] started, watching queue: job_queue
+[worker 17492] started, watching queue: job_queue
+[worker 17494] started, watching queue: job_queue
+[worker 17493] picked 9b673902-015d-400f-81da-47ca5e5610cc (scheduled tier=HIGH, direct hit)
+[worker 17493] CLAIMED 9b673902-015d-400f-81da-47ca5e5610cc — status is now RUNNING
+[worker 17493] : type=send_email, priority=HIGH, payload={'to': 'customer1@test.com'}
+    → sending email to customer1@test.com
+[worker 17493] ✓ SUCCESS 9b673902-015d-400f-81da-47ca5e5610cc
+

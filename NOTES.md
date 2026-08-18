@@ -811,3 +811,53 @@ preserve it, I'd add a job_events table — append-only, one row per status
 change, keyed by job_id. The jobs table stays as current state; job_events
 becomes the audit trail. I didn't build it because my priority was the queue
 infrastructure, but the schema and the insertion points are straightforward."
+
+
+
+
+## System-Level Invariant: Redis Depth vs PostgreSQL PENDING
+
+When the system is idle:
+    ZCARD job_queue  ==  COUNT(*) WHERE status='PENDING'
+
+Every PENDING job should have exactly one Redis pointer. Persistent
+divergence means jobs were committed to PostgreSQL but their Redis push
+was lost — the dual-write failure identified in Week 2.
+
+**Transient divergence is normal and not a bug.** A worker that has popped
+a job but not yet run claim_job leaves it PENDING and absent from Redis for
+a few milliseconds. A single non-zero reading under load means nothing; only
+divergence that PERSISTS while idle is a real signal.
+
+Exposed at GET /jobs/stats/health. This is the first metric in the system
+that describes the relationship BETWEEN the two stores rather than the state
+of either one — which is what makes it a health check rather than a stat.
+
+## Retried Jobs Re-enter at Original Priority
+
+The sweeper requeues using PRIORITY_SCORES[job.priority.value], so a HIGH
+job on its 4th attempt competes equally with a brand-new HIGH job. Priority
+is a property of the JOB, not of the ATTEMPT.
+
+Deliberate: retry_count reflects failure, not urgency. Boosting priority on
+retry risks a repeatedly-failing job monopolising worker capacity; demoting
+on retry would effectively be a crude circuit breaker. Equal treatment is
+the neutral position.
+
+## Integration Testing vs Unit Testing
+
+Every Week 5 component was verified in isolation as it was built — backoff
+math alone, orphan recovery alone, manual retry alone. Integration bugs live
+in the INTERACTIONS between components that each work correctly, so the final
+test runs everything concurrently: mixed priorities, clean jobs, flaky jobs
+that recover, doomed jobs that exhaust the budget, and permanent failures,
+with workers and the sweeper both live.
+
+**The key assertion is the absence of non-terminal states.** After the run,
+every job must be SUCCESS or DEAD — zero PENDING, RUNNING, or FAILED. Any
+job stuck in a transitional state means some path failed to complete, and
+that is far more informative than checking individual outcomes.
+
+The clearest single piece of evidence from the run: DEAD jobs at
+retry_count=1 (permanent) sitting alongside DEAD jobs at retry_count=4
+(transient, exhausted). Same terminal status, two genuinely different paths.

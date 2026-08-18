@@ -131,3 +131,20 @@ def list_jobs_by_status(
     )
     return jobs
 
+
+@router.get("/stats/health")
+def queue_health(db: Session = Depends(get_db)):
+    """Compare Redis queue depth against PostgreSQL PENDING count.
+
+    These should match when idle. Divergence indicates jobs committed to
+    PostgreSQL whose Redis push was lost — the sweeper repairs these.
+    """
+    redis_depth = redis_client.zcard(REDIS_QUEUE_KEY)
+    pending_count = db.query(Job).filter(Job.status == JobStatus.PENDING).count()
+
+    return {
+        "redis_queue_depth": redis_depth,
+        "postgres_pending": pending_count,
+        "divergence": pending_count - redis_depth,
+        "healthy": pending_count == redis_depth,
+    }

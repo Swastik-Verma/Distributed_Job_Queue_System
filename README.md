@@ -4,7 +4,7 @@ A background job processing system built from scratch in Python — the
 kind of infrastructure that sits behind "your order is confirmed, email
 on its way." Similar in spirit to Celery or BullMQ.
 
-**Status:** In development (Day 27 of 60 - Week 4 complete)
+**Status:** In development (Day 35 of 60 - Week 5 complete)
 
 ## The problem
 
@@ -185,3 +185,23 @@ retry window and a human has since fixed the root cause.
 `error_message`, so previous failure history is lost from the jobs table.
 The proper fix is an append-only `job_events` table recording every status
 change — not yet implemented, as the queue infrastructure was the priority.
+
+## Testing
+
+Load and integration scripts live in `experiments/`:
+
+- `flood_high.py` — deliberately imbalanced load; verifies LOW-priority
+  jobs are not starved under sustained HIGH pressure.
+- `balanced_load.py` — balanced load across all tiers; makes the configured
+  6:3:1 throughput ratio measurable.
+- `integration_test.py` — mixed workload exercising every path at once:
+  clean jobs, transient failures that recover, failures that exhaust the
+  retry budget, and permanent failures, across all three priority tiers.
+
+The primary integration assertion is that no job remains in a non-terminal
+state: after the run, every job is `SUCCESS` or `DEAD`, with zero `PENDING`,
+`RUNNING`, or `FAILED`.
+
+`GET /jobs/stats/health` compares Redis queue depth against the PostgreSQL
+`PENDING` count. These match when idle; persistent divergence indicates jobs
+whose Redis push was lost, which the sweeper repairs.

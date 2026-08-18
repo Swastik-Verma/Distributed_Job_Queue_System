@@ -1,0 +1,25 @@
+[sweeper 19:04:28] started (PID 4937), scanning every 5s
+[sweeper 19:07:33] requeued 445b4226-8dba-4b2d-b5ee-4771fb0d08f6 (attempt 2/4, HIGH)
+[sweeper 19:07:33] cycle complete — retries=1 stuck=0 orphans=0
+[sweeper 19:07:38] requeued 074cce35-cecc-4fb3-a07f-f81c716d7f47 (attempt 2/4, MEDIUM)
+[sweeper 19:07:38] requeued 71671056-f7ba-40c3-8648-cfc15f106268 (attempt 2/4, HIGH)
+[sweeper 19:07:38] requeued 6cb05c1b-6c1d-474c-9ae7-10a9a7088aec (attempt 2/4, MEDIUM)
+[sweeper 19:07:38] cycle complete — retries=3 stuck=0 orphans=0
+[sweeper 19:07:43] requeued dfc0dd8f-977d-4972-9901-6732439c2d4f (attempt 2/4, HIGH)
+[sweeper 19:07:43] requeued f3c0de21-3ad3-49fa-b990-1eab2e482b63 (attempt 2/4, MEDIUM)
+[sweeper 19:07:43] requeued 445b4226-8dba-4b2d-b5ee-4771fb0d08f6 (attempt 3/4, HIGH)
+[sweeper 19:07:43] requeued 9b16aff1-1dd7-448f-8369-922f343b23f3 (attempt 2/4, MEDIUM)
+[sweeper 19:07:43] cycle complete — retries=4 stuck=0 orphans=0
+[sweeper 19:07:48] requeued 074cce35-cecc-4fb3-a07f-f81c716d7f47 (attempt 3/4, MEDIUM)
+[sweeper 19:07:48] cycle complete — retries=1 stuck=0 orphans=0
+[sweeper 19:07:53] requeued 9b16aff1-1dd7-448f-8369-922f343b23f3 (attempt 3/4, MEDIUM)
+[sweeper 19:07:53] requeued dfc0dd8f-977d-4972-9901-6732439c2d4f (attempt 3/4, HIGH)
+[sweeper 19:07:53] requeued 71671056-f7ba-40c3-8648-cfc15f106268 (attempt 3/4, HIGH)
+[sweeper 19:07:53] cycle complete — retries=3 stuck=0 orphans=0
+[sweeper 19:07:58] requeued 445b4226-8dba-4b2d-b5ee-4771fb0d08f6 (attempt 4/4, HIGH)
+[sweeper 19:07:58] cycle complete — retries=1 stuck=0 orphans=0
+[sweeper 19:08:18] requeued 074cce35-cecc-4fb3-a07f-f81c716d7f47 (attempt 4/4, MEDIUM)
+[sweeper 19:08:18] cycle complete — retries=1 stuck=0 orphans=0
+[sweeper 19:08:24] requeued dfc0dd8f-977d-4972-9901-6732439c2d4f (attempt 4/4, HIGH)
+[sweeper 19:08:24] requeued 71671056-f7ba-40c3-8648-cfc15f106268 (attempt 4/4, HIGH)
+[sweeper 19:08:24] cycle complete — retries=2 stuck=0 orphans=0
