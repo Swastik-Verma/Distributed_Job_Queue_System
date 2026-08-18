@@ -719,3 +719,95 @@ ever reached, the normal path should not be crowded out by them.
 Added index on (status, updated_at) — both new sweeps filter on that pair
 every SWEEPER_INTERVAL seconds, alongside the existing
 (status, next_retry_at) index for due retries.
+
+## Manual Retry: The Human Escape Hatch
+
+Every automated recovery mechanism has a boundary. Backoff covers short
+outages; max_retries bounds the budget; the sweeper repairs divergence
+between PostgreSQL and Redis. Once a job reaches DEAD, nothing automated
+touches it again — deliberately. POST /jobs/{id}/retry is the path back.
+
+**The trigger is a fixed root cause, not elapsed time.** Alert → investigate
+→ read error_message on DEAD jobs → fix → verify the dependency → retry the
+affected jobs. No timer decides this, because the system cannot know whether
+the underlying problem is resolved. Only a human can.
+
+**Allowed from DEAD and FAILED; refused from SUCCESS, PENDING, RUNNING.**
+  SUCCESS → the side effect already happened; retrying duplicates it.
+  PENDING → already queued; requeueing adds a duplicate pointer.
+  RUNNING → a worker holds it; resetting mid-flight causes double-processing.
+FAILED is allowed even though the sweeper would eventually get to it — an
+operator who knows the dependency is back should not have to wait out a
+5-minute backoff.
+
+**retry_count resets to 0 — deliberate trade-off.** Preserving it would make
+the feature useless: a DEAD job at retry_count=4 with max_retries=3 returns
+to DEAD on its first failure. Resetting encodes what the operator is actually
+asserting — the root cause is fixed, so attempts made against a broken system
+should not count.
+
+**Sixth use of conditional update as compare-and-swap.** The status check
+above the update is a check-then-act with a gap — the sweeper or a second
+operator could act inside it. UPDATE ... WHERE status IN (DEAD, FAILED)
+makes the write carry the condition; the loser gets rows=0 and a clean 409
+rather than a duplicate queue entry.
+
+## Known Gap: Failure History Lost on Retry
+
+When POST /jobs/{id}/retry resets a DEAD job, it overwrites:
+  retry_count   → 0
+  error_message → NULL
+  next_retry_at → NULL
+
+The previous failure history in the jobs table is permanently erased. If
+terminal logs were not captured (e.g. with tee), the history is truly lost.
+No record of what errors occurred, how many attempts were made, or when
+each failure happened.
+
+**Why this matters:** an operator who retried 5 DEAD jobs cannot later
+answer "what errors were those jobs originally failing with?" The diagnostic
+information that guided their fix-then-retry decision is gone.
+
+**The fix (not implemented): a job_events table.**
+
+An append-only history table where every status change inserts a new row
+instead of overwriting. The jobs table stays as current state (one row per
+job, overwritten on each change). job_events becomes the full audit trail
+(many rows per job, never overwritten or deleted).
+
+Schema:
+  id          UUID primary key
+  job_id      UUID foreign key → jobs.id
+  old_status  TEXT
+  new_status  TEXT
+  error       TEXT (nullable)
+  timestamp   TIMESTAMPTZ
+
+Every call to mark_failed, mark_success, claim_job, or retry_job would
+add one row:
+
+  job_id=abc-123, PENDING→RUNNING,  error=NULL,                   10:00:01
+  job_id=abc-123, RUNNING→FAILED,   error="connection timeout",   10:00:03
+  job_id=abc-123, PENDING→RUNNING,  error=NULL,                   10:00:08
+  job_id=abc-123, RUNNING→FAILED,   error="connection refused",   10:00:10
+  job_id=abc-123, FAILED→DEAD,      error="retries exhausted",    10:00:10
+
+After manual retry resets the jobs row to PENDING with retry_count=0, the
+events table still holds the complete history. The current state says
+"clean slate"; the history says "failed 3 times with these specific errors
+before being manually retried."
+
+Analogy: the jobs table is the front page of a patient's file (current
+status, overwritten). The job_events table is the inner pages (every visit
+recorded, append-only, never erased).
+
+**Why not built:** the queue infrastructure (retry, backoff, sweeper, manual
+retry) was the priority. The job_events table is a data-model addition that
+doesn't affect processing logic — it only improves observability. Suitable
+for Week 8 polish or a production extension.
+
+**Interview framing:** "I know the history is lost on retry. If I needed to
+preserve it, I'd add a job_events table — append-only, one row per status
+change, keyed by job_id. The jobs table stays as current state; job_events
+becomes the audit trail. I didn't build it because my priority was the queue
+infrastructure, but the schema and the insertion points are straightforward."

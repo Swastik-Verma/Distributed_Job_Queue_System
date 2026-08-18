@@ -58,6 +58,8 @@ pop an ID from Redis, then load the full job from PostgreSQL.
 - [x] `GET /jobs/stats/queue` — live queue depth by priority tier
 - [x] Handler registry — job types dispatch to registered functions
       (`worker/handlers.py`), with per-handler payload validation
+- [x] `POST /jobs/{id}/retry` — manual retry for DEAD/FAILED jobs
+- [x] `GET /jobs/status/{status}` — list jobs by status (DLQ inspection)
 
 ## Roadmap
 
@@ -69,6 +71,13 @@ pop an ID from Redis, then load the full job from PostgreSQL.
 - [ ] Live dashboard over WebSockets
 - [ ] Docker Compose for the full stack
 - [ ] Deployment
+
+### Not Yet Implemented
+
+- **Job event history table** — append-only audit trail of every status change per job. Currently, failure history is overwritten on retry.
+- **Idempotent handlers** — dedup keys to prevent duplicate side effects
+  when a job is re-processed after worker death.
+- **Graceful worker shutdown** — catch SIGTERM, finish current job before stopping, to avoid unnecessary orphan recovery.
 
 ## Data model
 
@@ -165,3 +174,14 @@ to DEAD, rather than burning the retry budget on a guaranteed-identical
 outcome. Transient failures get the full backoff cycle, and jobs exceeding
 `max_retries` are marked DEAD — preserved with their error message for
 inspection and manual retry.
+
+Jobs that exhaust their retries — or fail permanently — are preserved as
+DEAD with their error message rather than discarded. `GET /jobs/status/DEAD`
+lists them for inspection and `POST /jobs/{id}/retry` re-queues one with a
+fresh retry budget, for the case where an outage outlasted the automated
+retry window and a human has since fixed the root cause.
+
+**Known limitation:** manual retry resets `retry_count` and clears
+`error_message`, so previous failure history is lost from the jobs table.
+The proper fix is an append-only `job_events` table recording every status
+change — not yet implemented, as the queue infrastructure was the priority.

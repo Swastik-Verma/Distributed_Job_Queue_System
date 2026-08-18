@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from datetime import datetime, timezone
 from app.database import get_db
 from app.models import Job, JobStatus
 from app.schemas import JobCreate, JobResponse
@@ -56,3 +57,77 @@ def queue_stats():
         "total_queued": total,
         "by_priority": by_priority,
     }
+
+
+@router.post("/{job_id}/retry", response_model=JobResponse)
+def retry_job(job_id: UUID, db: Session = Depends(get_db)):
+    """Manually retry a DEAD or FAILED job.
+
+    Resets retry_count so the job gets a full fresh retry budget — the
+    operator is asserting the root cause is fixed, so prior attempts
+    shouldn't count against it.
+    """
+    job = db.query(Job).filter(Job.id == job_id).first()
+
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    if job.status in (JobStatus.PENDING, JobStatus.RUNNING):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Job is {job.status.value} — already queued or in progress",
+        )
+
+    if job.status == JobStatus.SUCCESS:
+        raise HTTPException(
+            status_code=409,
+            detail="Job already succeeded — retrying would duplicate its side effects",
+        )
+
+    # Conditional transition: only from a terminal/retryable state.
+    rows = (
+        db.query(Job)
+        .filter(
+            Job.id == job_id,
+            Job.status.in_([JobStatus.DEAD, JobStatus.FAILED]),
+        )
+        .update({
+            Job.status: JobStatus.PENDING,
+            Job.retry_count: 0,
+            Job.next_retry_at: None,
+            Job.error_message: None,
+            Job.updated_at: datetime.now(timezone.utc),
+        })
+    )
+    db.commit()
+
+    if rows == 0:
+        raise HTTPException(
+            status_code=409,
+            detail="Job status changed concurrently — please retry the request",
+        )
+
+    db.refresh(job)
+
+    score = PRIORITY_SCORES[job.priority.value]
+    redis_client.zadd(REDIS_QUEUE_KEY, {str(job.id): score})
+
+    return job
+
+
+@router.get("/status/{status}", response_model=list[JobResponse])
+def list_jobs_by_status(
+    status: JobStatus,
+    limit: int = 50,
+    db: Session = Depends(get_db),
+):
+    """List jobs by status, most recent first. Primary use: inspecting DEAD jobs."""
+    jobs = (
+        db.query(Job)
+        .filter(Job.status == status)
+        .order_by(Job.updated_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return jobs
+
